@@ -1,0 +1,65 @@
+{
+  "name": "dsh-cross-workspace",
+  "version": "0.8.1",
+  "private": true,
+  "description": "跨工作区信使：让不同工作区的会话互相收发消息、传文件与 JSON 数据，支持手动群组、指定群成员、运行中目标等待后排队，并提供收件箱、可视化交流图与管理面板。Cross-workspace courier: message and data exchange between workspaces, manual groups with per-recipient selection, running-target wait/queue, inbox, visual communication graph and management panel.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib/*.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs/API.md",
+    "docs/ARCHITECTURE.md",
+    "docs/UPGRADING.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "workspace",
+    "mailbox",
+    "cross-workspace"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dream-office/dsh-cross-workspace"
+  },
+  "homepage": "https://github.com/dream-office/dsh-cross-workspace#readme",
+  "bugs": {
+    "url": "https://github.com/dream-office/dsh-cross-workspace/issues"
+  },
+  "engines": {
+    "node": ">=22.13.0",
+    "dsh": ">=0.2.2-rc.1"
+  },
+  "license": "MIT"
+}

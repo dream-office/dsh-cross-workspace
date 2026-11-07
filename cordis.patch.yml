@@ -1,0 +1,8 @@
+# dsh-cross-workspace bundle layer: the row loads the package's main entry as
+# the Host half (tools, mailbox storage, delivery, management API). The
+# `dsh.client` declaration in package.json makes the Web app load ./client.js
+# as the browser half (sidebar panel + settings section).
+- insert:
+    - id: cross-workspace
+      name: 'dsh-cross-workspace'
+      config: {}

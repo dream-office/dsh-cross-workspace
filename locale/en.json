@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Cross-workspace courier",
+    "description": "Message and data exchange between workspaces, with manual groups, per-group recipient selection, running-target wait/queue, an inbox, a visual communication graph, files and JSON payloads, plus a management panel."
+  }
+}
