@@ -11,7 +11,9 @@
 - `SECURITY.md` / `CODE_OF_CONDUCT.md` 已改为 GitHub Issues / 私密报告；
   `AGENTS.md` 隐私不变量恢复为“公开材料零邮箱”；`docs/UPGRADING.md` 检查项同步。
 - 版本号在 README / AGENTS / API / ARCHITECTURE / UPGRADING 同步。
-- 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改元数据/文档，不改运行行为。
+- CI 新增 encoding job：所有 tracked 文本文件检查 UTF-8 BOM 与 CRLF，扩展名无关；
+  本地注入 BOM 已验证会红、恢复后绿。
+- 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改元数据/文档/CI，不改运行行为。
 
 ### 备份
 
