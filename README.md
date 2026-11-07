@@ -39,11 +39,10 @@ plugin_manager install_bundle target="<clone 后的 dsh-cross-workspace 绝对�
 安装后按下面的「验证安装」检查工具与面板；升级时 `git pull` 后重新安装/重载即可。
 项目使用 **MIT License**，见 [`LICENSE`](LICENSE)。
 
-### npm 包
+### npm 包（已放弃）
 
-`0.8.4` 起包已设为可公开发布：`dsh-cross-workspace`、`publishConfig.access=public`。
-发布后可在 npm 查看；DSH 侧仍通过 Plugin Manager 安装 bundle，不要求用户手工 `npm install`。
-实际发布需要用户提供 npm 认证 token，认证前不会 publish。
+2026-11-07 npm 发布已下架；项目**不再以 npm 作为分发渠道**，市场使用 GitHub tarball。
+`0.8.4` 的 tarball 仍可本地安装，但不会重新发布到 npm。
 
 启用/升级：
 

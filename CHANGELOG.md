@@ -14,6 +14,8 @@
   改用可用的 `pnpm 11.28.5` 做 `pnpm pack` 自检（等价 tarball）。npm 认证需用户 token。
 - 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改包元数据/文档。
 - 未 push、未 publish；tag/Release 等 GitHub 助手放行。
+- **后续记录（2026-11-07）**：npm 发布已下架（用户选择放弃 npm，registry 只剩无邮箱
+  tombstone）；项目不再以 npm 为分发渠道，市场使用 GitHub tarball。`0.8.4` tarball 仍可安装。
 
 ## 2026-11-07 · 0.8.3（移除公开邮箱）
 
