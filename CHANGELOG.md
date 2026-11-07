@@ -13,10 +13,10 @@
   旧消息里的 `messageId` 提示仍可用；schema 不再强制 `required:['id']`，由执行期校验。
 - 同步工具描述与 API/AGENTS 文档；新增回归：提示文本不含 `messageId`、旧别名字段可成功回复。
 - 测试：**191 tests / 57 suites，191 pass，0 fail**（不新增用例数，覆盖在现有用例内）。
-- 版本 `0.8.1`；Host 已重载加载 0.8.1；**不 push、不发布**。
+- 版本 `0.8.1`；发布状态：发布前准备完成。
 - **开源发布准备**：修正 README 测试数漂移；补「从 GitHub 安装」；`package.json` 增加
   `repository/homepage/bugs` 与 `engines.dsh >=0.2.2-rc.1`（实测 DSH 版本）；`.gitignore`
-  已排除 `reports/`/`.tmp/`，`package.json#files` 不含 `reports`；未 `git init`、未 push。
+  已排除 `reports/`/`.tmp/`，`package.json#files` 不含 `reports`。
 
 ### 备份
 
