@@ -6,7 +6,7 @@
 > **给 AI**：先读 [`AGENTS.md`](AGENTS.md)（仓库操作规则、不变量、验收清单），
 > 精确契约看 [`docs/API.md`](docs/API.md)，运行原理看 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-- 版本：`0.8.1`（`package.json` / API 契约 / CHANGELOG 同步）
+- 版本：`0.8.2`（`package.json` / API 契约 / CHANGELOG 同步）
 - 文档最后更新：2026-11-07
 - 测试：**191 tests / 57 suites，全绿**（数字以当前仓库为准，改测试后需同步）
 - 运行位置：本机同一个 DSH Host 进程内；没有出站网络请求，消息与附件不上传
@@ -357,7 +357,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 ## 14. 变更记录与验证
 
 - 详细版本历史：[`CHANGELOG.md`](CHANGELOG.md)
-- 当前版本：`0.8.1`
+- 当前版本：`0.8.2`
 - 自动测试：**191 tests / 57 suites，191 pass / 0 fail**
 - 独立复核记录在本机 `reports/`（已 gitignore，不随包发布）；文档会随行为变化同步更新。
 
@@ -368,7 +368,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 ## 15. 数据版本与升级
 
 `package.json.version` 是插件版本；`lib/store.js` 的 `STORE_VERSION` 是 `store.json` 数据版本。
-当前两者分别是 `0.8.1` 和 `2`。
+当前两者分别是 `0.8.2` 和 `2`。
 
 - 升级前先备份 `$DSH_HOME/cross-workspace`；
 - v1 数据加载时自动迁移到 v2，并把 `version: 2` 写回；
@@ -384,3 +384,12 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 MIT，见 [`LICENSE`](LICENSE)。`package.json` 已填写 `dream-office` 账号的
 `repository` / `homepage` / `bugs`；公开前按
 [`docs/UPGRADING.md`](docs/UPGRADING.md) §5 的开源检查清单扫描隐私与发布面。
+
+---
+
+## 17. 参与贡献
+
+- 贡献流程与测试命令：[`CONTRIBUTING.md`](CONTRIBUTING.md)
+- 行为准则：[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+- 安全漏洞：不要开公开 issue，按 [`SECURITY.md`](SECURITY.md) 私下报告
+- 贡献默认按 MIT 授权，与项目一致。

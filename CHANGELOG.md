@@ -2,6 +2,29 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
+## 2026-11-07 · 0.8.2（发布质量与社区规范）
+
+> Release 摘要：版本/作者信息统一；补齐社区规范文件与 CI；提供 `npm test`；
+> 功能与 191 个测试保持不变。
+
+- 版本 `0.8.2`；`author` 为 `dream-office <dream-office>`；
+  `LICENSE` 版权主体统一为 `dream-office`。
+- 新增 `CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`；
+  `.github/ISSUE_TEMPLATE/bug_report.md`、`feature_request.md`、`PULL_REQUEST_TEMPLATE.md`；
+  `.github/workflows/test.yml`（Node 22/24，显式 4 个测试文件 + `node --check`）。
+- `package.json` 新增 `"test": "node --test test/store.test.mjs test/resolve.test.mjs test/format.test.mjs test/route.test.mjs"`；
+  `files` 纳入 `CONTRIBUTING.md` / `SECURITY.md` / `CODE_OF_CONDUCT.md`。
+- **Playwright 评估**：不在本仓库加入 Playwright。面板依赖 DSH Host/profile 与登录态，
+  仓库内没有可独立启动的 Web 入口；CI 无法稳定复现。保留 Node 级 store/route/tool 测试与
+  手工面板冒烟清单；若未来做端到端，应单独放 Host fixture 的 e2e 仓库（opt-in，不阻塞发布）。
+- 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改文档/元数据/CI，不改运行行为。
+
+### 备份
+
+| 时间 | 目录 | 内容 |
+|---|---|---|
+| 待备份 | `待补` | 0.8.2 社区规范/CI/author |
+
 ## 2026-11-06 · 0.8.1（mail_reply 参数文案修复）
 
 > Release 摘要：修复 `mail_reply` 提示写 `messageId`、工具却要 `id` 导致的「需要 id」报错；

@@ -1,0 +1,31 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Syntax check
+        run: |
+          node --check index.js
+          node --check client.js
+          node --check lib/store.js
+          node --check lib/resolve.js
+          node --check lib/format.js
+          node --check lib/delivery.js
+      - name: Tests
+        run: node --test test/store.test.mjs test/resolve.test.mjs test/format.test.mjs test/route.test.mjs
