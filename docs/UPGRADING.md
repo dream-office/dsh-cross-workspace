@@ -84,7 +84,8 @@
 - [x] `package.json`：`license`、`files` 完整；`repository` / `homepage` / `bugs` 已填
       `dream-office/dsh-cross-workspace` 规划地址；`private: true` 暂时保留（仅 GitHub 发布，不发 npm）。
 - [x] `LICENSE` 存在且与 `package.json#license` 一致（当前 MIT）。
-- [x] 不包含个人绝对路径、真实姓名/邮箱/客户数据；`reports/` 保持 gitignore 且不在 `files`。
+- [x] 不包含个人绝对路径、真实姓名/客户数据；个人邮箱仅限 owner 批准的 `package.json#author`；
+      `SECURITY.md`/`CODE_OF_CONDUCT.md` 使用 GitHub 私下报告；`reports/` 保持 gitignore 且不在 `files`。
 - [x] `README.md` / `AGENTS.md` / `docs/API.md` / `docs/ARCHITECTURE.md` / `docs/UPGRADING.md` 同步。
 - [x] 测试全绿；`CHANGELOG.md` 写明迁移影响。
 - [ ] 打 tag（例如 `v0.8.2`）；Release 说明链接本文档的升级步骤。

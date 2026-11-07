@@ -38,10 +38,11 @@ behavior. They may remove, edit, or reject comments, commits, code, issues and
 other contributions that do not align with this Code of Conduct, and will
 communicate reasons for moderation decisions when appropriate.
 
-Report abusive, harassing, or otherwise unacceptable behavior to
-**dream-office**. All complaints will be reviewed and investigated
-promptly and fairly. Maintainers will respect the privacy and security of the
-reporter.
+Report abusive, harassing, or otherwise unacceptable behavior through the
+repository maintainers (open a minimal issue asking for a private channel, or
+use GitHub's private reporting if the report is sensitive). All complaints will
+be reviewed and investigated promptly and fairly. Maintainers will respect the
+privacy and security of the reporter.
 
 ## Enforcement guidelines
 

@@ -100,7 +100,8 @@ package.json             bundle + client 清单、exports、files
 11. **生命周期清理**：所有注册放 `ctx.effect`/`ctx.on`；agent 作用域注册要同时由 agent dispose 与
     插件卸载清理；存储卸载前 `store.flush()`。
 12. **隐私**：不把真实姓名、学号、邮箱、手机号、客户名、个人绝对路径写进随包文件或测试夹具。
-    `reports/` 必须保持 gitignore 且不进 `package.json#files`。
+    唯一例外：owner 明确批准公开的维护者邮箱只出现在 `package.json#author`；其他文档/社区文件
+    不写个人邮箱，安全与行为问题用 GitHub 私下报告。`reports/` 必须保持 gitignore 且不进 `package.json#files`。
 
 ---
 

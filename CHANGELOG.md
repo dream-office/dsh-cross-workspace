@@ -7,7 +7,8 @@
 > Release 摘要：版本/作者信息统一；补齐社区规范文件与 CI；提供 `npm test`；
 > 功能与 191 个测试保持不变。
 
-- 版本 `0.8.2`；`author` 为 `dream-office <dream-office>`；
+- 版本 `0.8.2`；`author` 为 `dream-office`（owner 明确批准公开的维护者邮箱写在
+  `package.json#author`；`SECURITY.md` / `CODE_OF_CONDUCT.md` 不写个人邮箱，改用 GitHub 私下报告）。
   `LICENSE` 版权主体统一为 `dream-office`。
 - 新增 `CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`；
   `.github/ISSUE_TEMPLATE/bug_report.md`、`feature_request.md`、`PULL_REQUEST_TEMPLATE.md`；
@@ -18,12 +19,13 @@
   仓库内没有可独立启动的 Web 入口；CI 无法稳定复现。保留 Node 级 store/route/tool 测试与
   手工面板冒烟清单；若未来做端到端，应单独放 Host fixture 的 e2e 仓库（opt-in，不阻塞发布）。
 - 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改文档/元数据/CI，不改运行行为。
+- **变异验证**：临时把 `mail_reply` 提示改回 `messageId`，格式测试按预期 2 条失败；还原后哈希一致、191 全绿。
 
 ### 备份
 
 | 时间 | 目录 | 内容 |
 |---|---|---|
-| 2026-11-07 14:02:42 | `20261107-140242` | 0.8.2 社区规范/CI/author + 191 测试（62 文件） |
+| 2026-11-07 14:03:14 | `20261107-140314` | 0.8.2 社区规范/CI/author + 191 测试（62 文件） |
 
 ## 2026-11-06 · 0.8.1（mail_reply 参数文案修复）
 

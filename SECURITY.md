@@ -11,7 +11,12 @@
 
 **Do not open a public GitHub issue for a security report.**
 
-Email the maintainer at **dream-office** with:
+Use GitHub's private vulnerability reporting for this repository:
+<https://github.com/dream-office/dsh-cross-workspace/security/advisories/new>.
+If that page is unavailable, open a minimal issue asking the maintainer for a
+private channel; do not include exploit details in the public issue.
+
+Include:
 
 - affected version and DSH version;
 - a minimal reproduction (steps, store shape if relevant);
