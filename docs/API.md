@@ -1,6 +1,6 @@
 # dsh-cross-workspace 内部契约
 
-版本：0.8.3（与 `package.json` 同步）。最后同步：2026-11-07。这个文件是 Host 半、Client 半和测试共同遵守的契约。
+版本：0.8.4（与 `package.json` 同步）。最后同步：2026-11-07。这个文件是 Host 半、Client 半和测试共同遵守的契约。
 改动契约时先改这里，再改实现。
 
 > **人类读者**：§1 概念 → §3 数据 → §4 路由 → §6 工具；每个 action 都可直接对照代码。
@@ -12,7 +12,7 @@
 ```jsonc
 {
   "name": "dsh-cross-workspace",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "hostEntry": "index.js",
   "clientEntry": "client.js",
   "route": {

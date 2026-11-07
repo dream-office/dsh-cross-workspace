@@ -2,6 +2,19 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
+## 2026-11-07 · 0.8.4（npm 发布准备）
+
+> Release 摘要：包改为可公开发布（`private:false` + `publishConfig.access=public`），
+> 版本/文档同步；功能与 191 tests 不变。npm 认证在用户侧，认证前不 publish。
+
+- `package.json` 版本 `0.8.4`，`private:false`，新增 `publishConfig.access: "public"`；
+  包名保持 `dsh-cross-workspace`，`author` 仍为 `dream-office`。
+- README / AGENTS / API / ARCHITECTURE / UPGRADING 版本同步；README 增加 npm 包说明。
+- **npm CLI 环境**：本机 PATH 无 node/npm/npx/corepack；DSH runtime 只有 `node.exe`，
+  改用可用的 `pnpm 11.28.5` 做 `pnpm pack` 自检（等价 tarball）。npm 认证需用户 token。
+- 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改包元数据/文档。
+- 未 push、未 publish；tag/Release 等 GitHub 助手放行。
+
 ## 2026-11-07 · 0.8.3（移除公开邮箱）
 
 > Release 摘要：公开材料不再出现个人邮箱；`package.json#author` 只写 `dream-office`；

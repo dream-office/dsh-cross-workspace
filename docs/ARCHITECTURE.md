@@ -3,7 +3,7 @@
 > 人群：需要改代码/排查问题的开发者，以及需要理解调用链的 AI。
 > 契约字段以 [`API.md`](API.md) 为准；操作规则见 [`../AGENTS.md`](../AGENTS.md)。
 
-- 版本：`0.8.3`
+- 版本：`0.8.4`
 - 最后同步：2026-11-07
 - 运行范围：本机同一个 DSH Host 进程
 - 数据位置：`$DSH_HOME/cross-workspace/`（`store.json` + `attachments/`）
