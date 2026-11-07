@@ -5,7 +5,7 @@
 >
 > 如果你只读一段：**先跑测试，守住第 3 节的 12 条不变量，按第 6 节验证、第 10 节 DoD 收尾。**
 
-- 当前版本：`0.8.2`
+- 当前版本：`0.8.3`
 - 文档最后同步：2026-11-07
 - 当前测试：**191 tests / 57 suites，191 pass / 0 fail**
 - 插件类型：Cordis bundle（Host 半 + Web Client 半），本地 `link:` 安装
@@ -100,8 +100,8 @@ package.json             bundle + client 清单、exports、files
 11. **生命周期清理**：所有注册放 `ctx.effect`/`ctx.on`；agent 作用域注册要同时由 agent dispose 与
     插件卸载清理；存储卸载前 `store.flush()`。
 12. **隐私**：不把真实姓名、学号、邮箱、手机号、客户名、个人绝对路径写进随包文件或测试夹具。
-    唯一例外：owner 明确批准公开的维护者邮箱只出现在 `package.json#author`；其他文档/社区文件
-    不写个人邮箱，安全与行为问题用 GitHub 私下报告。`reports/` 必须保持 gitignore 且不进 `package.json#files`。
+    公开材料不出现邮箱；安全/行为问题走 GitHub Issues 或 private vulnerability reporting。
+    `reports/` 必须保持 gitignore 且不进 `package.json#files`。
 
 ---
 

@@ -4,7 +4,7 @@
 > （`lib/store.js` 的 `STORE_VERSION`）是两套独立版本号：插件升级不一定改数据格式，但数据格式一旦
 > 变化必须走这里的迁移流程。
 
-- 插件版本：`0.8.2`
+- 插件版本：`0.8.3`
 - 最后同步：2026-11-07
 - 当前 store schema：`2`
 - 当前测试：191 tests / 57 suites（以仓库实际为准）
@@ -84,11 +84,11 @@
 - [x] `package.json`：`license`、`files` 完整；`repository` / `homepage` / `bugs` 已填
       `dream-office/dsh-cross-workspace` 规划地址；`private: true` 暂时保留（仅 GitHub 发布，不发 npm）。
 - [x] `LICENSE` 存在且与 `package.json#license` 一致（当前 MIT）。
-- [x] 不包含个人绝对路径、真实姓名/客户数据；个人邮箱仅限 owner 批准的 `package.json#author`；
-      `SECURITY.md`/`CODE_OF_CONDUCT.md` 使用 GitHub 私下报告；`reports/` 保持 gitignore 且不在 `files`。
+- [x] 公开材料零邮箱；`SECURITY.md`/`CODE_OF_CONDUCT.md` 使用 GitHub Issues/私密报告；
+      `reports/` 保持 gitignore 且不在 `files`。
 - [x] `README.md` / `AGENTS.md` / `docs/API.md` / `docs/ARCHITECTURE.md` / `docs/UPGRADING.md` 同步。
 - [x] 测试全绿；`CHANGELOG.md` 写明迁移影响。
-- [ ] 打 tag（例如 `v0.8.2`）；Release 说明链接本文档的升级步骤。
+- [ ] 打 tag（例如 `v0.8.3`）；Release 说明链接本文档的升级步骤。
 - [ ] 发布前做隐私扫描（真实路径、邮箱、密钥）；不要把本机 `store.json`/附件/备份提交。
 - [ ] 安装说明使用相对路径/占位符，不写维护者个人目录。
 

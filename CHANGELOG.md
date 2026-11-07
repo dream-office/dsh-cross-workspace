@@ -2,14 +2,29 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
+## 2026-11-07 · 0.8.3（移除公开邮箱）
+
+> Release 摘要：公开材料不再出现个人邮箱；`package.json#author` 只写 `dream-office`；
+> 安全与行为问题统一走 GitHub Issues / private vulnerability reporting。功能不变。
+
+- `package.json` 版本 `0.8.3`，`author` 改为 `dream-office`（去掉邮箱）。
+- `SECURITY.md` / `CODE_OF_CONDUCT.md` 已改为 GitHub Issues / 私密报告；
+  `AGENTS.md` 隐私不变量恢复为“公开材料零邮箱”；`docs/UPGRADING.md` 检查项同步。
+- 版本号在 README / AGENTS / API / ARCHITECTURE / UPGRADING 同步。
+- 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改元数据/文档，不改运行行为。
+
+### 备份
+
+| 时间 | 目录 | 内容 |
+|---|---|---|
+| 待备份 | `待补` | 0.8.3 移除公开邮箱 |
+
 ## 2026-11-07 · 0.8.2（发布质量与社区规范）
 
 > Release 摘要：版本/作者信息统一；补齐社区规范文件与 CI；提供 `npm test`；
 > 功能与 191 个测试保持不变。
 
-- 版本 `0.8.2`；`author` 为 `dream-office`（owner 明确批准公开的维护者邮箱写在
-  `package.json#author`；`SECURITY.md` / `CODE_OF_CONDUCT.md` 不写个人邮箱，改用 GitHub 私下报告）。
-  `LICENSE` 版权主体统一为 `dream-office`。
+- 版本 `0.8.2`；`author` 为 `dream-office`；`LICENSE` 版权主体统一为 `dream-office`。
 - 新增 `CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`；
   `.github/ISSUE_TEMPLATE/bug_report.md`、`feature_request.md`、`PULL_REQUEST_TEMPLATE.md`；
   `.github/workflows/test.yml`（Node 22/24，显式 4 个测试文件 + `node --check`）。
