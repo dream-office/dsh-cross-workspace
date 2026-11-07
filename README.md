@@ -29,8 +29,7 @@ plugin_manager install_bundle target="<本项目绝对目录>"
 
 ### 从 GitHub 安装
 
-仓库地址按 `dream-office` 账号规划为
-`https://github.com/dream-office/dsh-cross-workspace`（转公开前需要账号访问权限）。
+仓库地址：`https://github.com/dream-office/dsh-cross-workspace`。
 
 ```text
 git clone https://github.com/dream-office/dsh-cross-workspace.git
@@ -382,6 +381,6 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 
 ## 16. 许可
 
-MIT，见 [`LICENSE`](LICENSE)。`package.json` 已按 `dream-office` 账号填写
-`repository` / `homepage` / `bugs` 规划地址；转公开前确认仓库已创建，并按
+MIT，见 [`LICENSE`](LICENSE)。`package.json` 已填写 `dream-office` 账号的
+`repository` / `homepage` / `bugs`；公开前按
 [`docs/UPGRADING.md`](docs/UPGRADING.md) §5 的开源检查清单扫描隐私与发布面。
