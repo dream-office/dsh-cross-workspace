@@ -8,6 +8,13 @@ permissions:
   contents: read
 
 jobs:
+  encoding:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check UTF-8 BOM and LF-only text files
+        run: bash .github/scripts/check-encoding.sh
+
   test:
     runs-on: ubuntu-latest
     strategy:
