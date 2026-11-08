@@ -4,8 +4,8 @@
 > （`lib/store.js` 的 `STORE_VERSION`）是两套独立版本号：插件升级不一定改数据格式，但数据格式一旦
 > 变化必须走这里的迁移流程。
 
-- 插件版本：`0.8.4`
-- 最后同步：2026-11-07
+- 插件版本：`0.8.5`
+- 最后同步：2026-11-08
 - 当前 store schema：`2`
 - 当前测试：191 tests / 57 suites（以仓库实际为准）
 - 数据位置：`$DSH_HOME/cross-workspace/store.json` + `attachments/`
@@ -88,7 +88,7 @@
       `reports/` 保持 gitignore 且不在 `files`。
 - [x] `README.md` / `AGENTS.md` / `docs/API.md` / `docs/ARCHITECTURE.md` / `docs/UPGRADING.md` 同步。
 - [x] 测试全绿；`CHANGELOG.md` 写明迁移影响。
-- [ ] 打 tag（例如 `v0.8.4`）；Release 说明链接本文档的升级步骤。
+- [ ] 打 tag（例如 `v0.8.5`）；Release 说明链接本文档的升级步骤。
 - [ ] 发布前做隐私扫描（真实路径、邮箱、密钥）；不要把本机 `store.json`/附件/备份提交。
 - [ ] 安装说明使用相对路径/占位符，不写维护者个人目录。
 

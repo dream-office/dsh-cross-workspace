@@ -2,6 +2,16 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
+## 2026-11-08 · 0.8.5（恢复 private + 官方声明）
+
+> Release 摘要：npm 已放弃，包恢复 `private:true` 防误发；README 增加“非 DeepSeek 官方”声明。
+
+- `package.json` 版本 `0.8.5`，恢复 `private:true`，移除 `publishConfig`。
+- README 顶部增加“非官方插件：与 DeepSeek / DeepSeek Harness 官方无隶属、无背书关系”。
+- README / AGENTS / API / ARCHITECTURE / UPGRADING 版本与日期同步为 `0.8.5` / 2026-11-08。
+- 测试：**191 tests / 57 suites，191 pass，0 fail**；本版只改元数据/文档。
+- 未 push、未 publish；tag/Release 由 GitHub 助手执行。
+
 ## 2026-11-07 · 0.8.4（npm 发布准备）
 
 > Release 摘要：包改为可公开发布（`private:false` + `publishConfig.access=public`），
