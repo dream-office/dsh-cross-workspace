@@ -117,6 +117,21 @@ describe('client P0 contracts', () => {
     assert.match(client, /position: 'fixed'/)
   })
 
+  it('keeps the U4 menu order and secondary pages', () => {
+    const menuStart = client.indexOf("{ key: 'sent'")
+    const menuEnd = client.indexOf("{ key: 'settings'")
+    assert.ok(menuStart >= 0 && menuEnd > menuStart)
+    const menu = client.slice(menuStart, menuEnd)
+    const order = ["t('已发送', 'Sent')", "t('群组…', 'Groups…')", "t('工作区', 'Workspaces')", "t('交流图', 'Graph')", "t('全部已读', 'Mark all read')", "t('刷新', 'Refresh')"]
+    const positions = order.map(token => menu.indexOf(token))
+    assert.ok(positions.every(position => position >= 0), JSON.stringify(positions))
+    assert.deepEqual(positions, positions.slice().sort((left, right) => left - right))
+    assert.match(client, /function openSecondary\(/)
+    assert.match(client, /function closeSecondary\(/)
+    assert.match(client, /secondary === 'workspaces'/)
+    assert.match(client, /secondary === 'groups'/)
+  })
+
   it('clear-read is described as fully-read-only', () => {
     assert.match(client, /仅删除全员已读/)
     assert.match(client, /Delete fully read/)

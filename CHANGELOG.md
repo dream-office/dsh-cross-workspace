@@ -23,7 +23,9 @@
   JSON 数据与唤醒/投递选项折叠到「高级」；Esc 关闭并回焦触发按钮。
 - **修复**：补上 U2/U3 引入的 `showSplitDetail` 声明，避免首屏 ReferenceError；新增无浏览器 render smoke test
   真正调用 `ManagementPage`（fake React + fake slot ctx），能直接抓 ReferenceError。
-- 测试：P0/P1/U1/U2/U3/F2 后 **206 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
+- **U4**：完整 `⋯` 菜单（已发送/群组…/工作区/交流图/─/全部已读/刷新/─/设置）；
+  工作区页、群组页、交流图迁为二级页并支持返回/Esc；主屏移除侧栏树与群组管理入口。
+- 测试：P0/P1/U1/U2/U3/U4/F2 后 **207 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
 - 未 push、未 Release；UI 阶段完成后统一 bump 0.9.0。
 
 ## 2026-11-08 · 0.8.5（恢复 private + 官方声明）

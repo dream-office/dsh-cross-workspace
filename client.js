@@ -1209,6 +1209,7 @@ window.__ModuleLoader__.load({
       const [groupIdFilter, setGroupIdFilter] = React.useState(null)
       const [selectedSessionId, setSelectedSessionId] = React.useState(null)
       const [menuOpen, setMenuOpen] = React.useState(false)
+      const [secondary, setSecondary] = React.useState(null)
       const [expanded, setExpanded] = React.useState({})
       const [detail, setDetail] = React.useState(null)
       const [editing, setEditing] = React.useState(null)
@@ -1266,6 +1267,17 @@ window.__ModuleLoader__.load({
         document.addEventListener('keydown', closeOnEscape)
         return function () { document.removeEventListener('keydown', closeOnEscape) }
       }, [detail])
+
+      React.useEffect(function () {
+        if (!secondary) return undefined
+        function closeOnEscape(event) {
+          if (event.key !== 'Escape') return
+          setSecondary(null)
+          if (menuButtonRef.current) menuButtonRef.current.focus()
+        }
+        document.addEventListener('keydown', closeOnEscape)
+        return function () { document.removeEventListener('keydown', closeOnEscape) }
+      }, [secondary])
 
       React.useEffect(function () {
         uiBusyRef.current = !!(compose || groupEditor || detail)
@@ -1534,6 +1546,32 @@ window.__ModuleLoader__.load({
         setFilter('group')
       }
 
+      function openSecondary(next) {
+        setMenuOpen(false)
+        setSecondary(next)
+        setDetail(null)
+        setCompose(null)
+      }
+
+      function closeSecondary() {
+        setSecondary(null)
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(function () {
+            if (menuButtonRef.current) menuButtonRef.current.focus()
+          })
+        }
+      }
+
+      function openSettings() {
+        setMenuOpen(false)
+        const shell = ctx && typeof ctx.get === 'function' ? ctx.get('shell') : undefined
+        if (shell && typeof shell.openSettings === 'function') {
+          shell.openSettings('cross-workspace')
+          return
+        }
+        setNotice(t('设置入口在 Harness 设置页的「跨工作区信使」分节。', 'Settings live in the Harness Settings page under “Cross-workspace courier”.'))
+      }
+
       function startCreateGroup() {
         setGroupEditor({ mode: 'create', group: null })
         setCompose(null)
@@ -1779,24 +1817,14 @@ window.__ModuleLoader__.load({
       }, 0)
       const displayUnread = hasViewer ? unreadTotal : workspaceUnreadTotal
 
-      const gridStyle = narrow
-        ? {
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr)',
-            gridTemplateRows: 'minmax(150px, 38%) minmax(0, 1fr)',
-            gap: 10,
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden',
-          }
-        : {
-            display: 'grid',
-            gridTemplateColumns: 'minmax(220px, 280px) minmax(0, 1fr)',
-            gap: 12,
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden',
-          }
+      const gridStyle = {
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr)',
+        gap: 12,
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+      }
 
       const rightColumnStyle = {
         display: 'flex',
@@ -1913,6 +1941,102 @@ window.__ModuleLoader__.load({
           onEdit: function () { startEdit(detail) },
           onDelete: deleteMessage,
         })
+      } else if (secondary) {
+        const secondaryTitle = secondary === 'workspaces'
+          ? t('工作区', 'Workspaces')
+          : (secondary === 'groups' ? t('群组', 'Groups') : t('交流图', 'Graph'))
+        let secondaryBody
+        if (secondary === 'workspaces') {
+          secondaryBody = h(WorkspaceColumn, {
+            t: t,
+            workspaces: workspaces,
+            groups: [],
+            unreadTotal: displayUnread,
+            expanded: expanded,
+            workspacePathFilter: workspacePathFilter,
+            groupIdFilter: null,
+            selectedSessionId: selectedSessionId,
+            now: now,
+            hasData: data !== null,
+            loading: loading,
+            error: error,
+            onToggle: toggleWorkspace,
+            onSelectAll: selectAllWorkspaces,
+            onSelectWorkspace: selectWorkspace,
+            onSelectSession: function (workspace, session) {
+              selectSession(workspace, session)
+              setSecondary(null)
+            },
+            onSelectGroup: function () {},
+            onEditGroup: function () {},
+            onCreateGroup: function () {},
+            onRetry: refreshNow,
+          })
+        } else if (secondary === 'groups') {
+          secondaryBody = h('div', { className: 'dshcw-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto', padding: 12, display: 'grid', gap: 8, alignContent: 'start' } },
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+              h('span', { style: { flex: 1, fontSize: 12, color: 'var(--dsw-alias-label-tertiary)' } },
+                t('群组消息只发给发送时的成员；后加入的成员看不到旧消息。', 'Group mail goes only to members at send time; later members cannot see older messages.')),
+              h(Button, { variant: 'primary', onClick: function () { setSecondary(null); startCreateGroup() } }, t('新建群组', 'New group'))
+            ),
+            groups.length === 0
+              ? h(EmptyState, { title: t('还没有群组', 'No groups yet'), description: t('新建一个群组，把不同工作区的会话拉到一起。', 'Create a group to bring sessions from different workspaces together.') })
+              : groups.map(function (group) {
+                  const memberCount = typeof group.memberCount === 'number'
+                    ? group.memberCount
+                    : (Array.isArray(group.members) ? group.members.length : 0)
+                  return h('div', {
+                    key: group.id,
+                    style: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 10px',
+                      border: '.5px solid var(--dsw-alias-border-l1)',
+                      borderRadius: 8,
+                      background: 'var(--dsw-alias-bg-layer-2)',
+                    },
+                  },
+                    h('button', {
+                      type: 'button',
+                      className: 'dshcw-btn',
+                      onClick: function () { selectGroup(group); setSecondary(null) },
+                      style: { flex: 1, minWidth: 0, border: 0, background: 'transparent', color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer' },
+                    },
+                      h('span', { className: 'dshcw-truncate', style: { display: 'block', fontSize: 13, fontWeight: 500 } }, group.name || group.id),
+                      h('span', { style: { display: 'block', fontSize: 10, color: 'var(--dsw-alias-label-tertiary)' } }, memberCount + t(' 位成员', ' members'))),
+                    h(Button, { variant: 'ghost', onClick: function () { setSecondary(null); startEditGroup(group) } }, t('编辑', 'Edit'))
+                  )
+                })
+          )
+        } else {
+          secondaryBody = h(InteractionGraph, {
+            t: t,
+            messages: rawMessages,
+            workspaces: workspaces,
+            groups: groups,
+            sessionDirectory: sessionDirectory,
+            mySessionId: mySessionId,
+            now: now,
+            onOpen: function (mail) { setSecondary(null); openMessage(mail) },
+          })
+        }
+        rightContent = h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 } },
+          h('div', {
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 10px',
+              flex: 'none',
+              borderBottom: '.5px solid var(--dsw-alias-border-l1)',
+            },
+          },
+            h(Button, { variant: 'ghost', onClick: closeSecondary }, '← ' + t('返回', 'Back')),
+            h('span', { style: { flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--dsw-alias-label-primary)' } }, secondaryTitle)
+          ),
+          secondaryBody
+        )
       } else {
         rightContent = h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 } },
           (workspacePathFilter || groupIdFilter)
@@ -2042,12 +2166,23 @@ window.__ModuleLoader__.load({
                     },
                   },
                     [
-                      { key: 'sent', label: t('已发送', 'Sent'), run: function () { setFilter('sent') } },
-                      { key: 'graph', label: t('交流图', 'Graph'), run: function () { setFilter('graph') } },
-                      { key: 'group', label: t('新建群组', 'New group'), run: startCreateGroup },
+                      { key: 'sent', label: t('已发送', 'Sent'), run: function () { setSecondary(null); setFilter('sent') } },
+                      { key: 'groups', label: t('群组…', 'Groups…'), run: function () { openSecondary('groups') } },
+                      { key: 'workspaces', label: t('工作区', 'Workspaces'), run: function () { openSecondary('workspaces') } },
+                      { key: 'graph', label: t('交流图', 'Graph'), run: function () { openSecondary('graph') } },
+                      { key: 'sep1', separator: true },
                       { key: 'read', label: t('全部已读', 'Mark all read'), run: markAllRead },
                       { key: 'refresh', label: t('刷新', 'Refresh'), run: refreshNow },
+                      { key: 'sep2', separator: true },
+                      { key: 'settings', label: t('设置', 'Settings'), run: openSettings },
                     ].map(function (item) {
+                      if (item.separator) {
+                        return h('div', {
+                          key: item.key,
+                          role: 'separator',
+                          style: { height: 1, margin: '4px 2px', background: 'var(--dsw-alias-border-l1)' },
+                        })
+                      }
                       return h('button', {
                         key: item.key,
                         type: 'button',
@@ -2108,29 +2243,6 @@ window.__ModuleLoader__.load({
           ? h(AlertBanner, { tone: 'success', role: 'status', onDismiss: function () { setNotice('') }, dismissLabel: t('关闭', 'Dismiss') }, notice)
           : null,
         h('div', { style: gridStyle },
-          h(WorkspaceColumn, {
-            key: 'workspaces',
-            t: t,
-            workspaces: workspaces,
-            groups: groups,
-            unreadTotal: displayUnread,
-            expanded: expanded,
-            workspacePathFilter: workspacePathFilter,
-            groupIdFilter: groupIdFilter,
-            selectedSessionId: selectedSessionId,
-            now: now,
-            hasData: data !== null,
-            loading: loading,
-            error: error,
-            onToggle: toggleWorkspace,
-            onSelectAll: selectAllWorkspaces,
-            onSelectWorkspace: selectWorkspace,
-            onSelectSession: selectSession,
-            onSelectGroup: selectGroup,
-            onEditGroup: startEditGroup,
-            onCreateGroup: startCreateGroup,
-            onRetry: refreshNow,
-          }),
           showSplitDetail
             ? h('div', {
                 key: 'split',
