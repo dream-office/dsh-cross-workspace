@@ -1,4 +1,4 @@
-﻿// cross-workspace client v1.0 rewrite — single top-level `view`, explicit handlers.
+// cross-workspace client v1.0 rewrite — single top-level `view`, explicit handlers.
 // Browser half only: no bundler, no JSX, no Harness client imports. Host contract
 // (tools, actions, store v2, delivery semantics) is unchanged; this file only
 // renders state and calls the existing management API.

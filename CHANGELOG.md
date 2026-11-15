@@ -1,4 +1,4 @@
-﻿# CHANGELOG · 跨工作区信使（dsh-cross-workspace）
+# CHANGELOG · 跨工作区信使（dsh-cross-workspace）
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 

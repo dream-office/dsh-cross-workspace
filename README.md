@@ -1,4 +1,4 @@
-﻿# 跨工作区信使 · dsh-cross-workspace
+# 跨工作区信使 · dsh-cross-workspace
 
 > **非官方插件**：与 DeepSeek / DeepSeek Harness 官方无隶属、无背书关系。
 

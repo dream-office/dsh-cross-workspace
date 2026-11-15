@@ -1,4 +1,4 @@
-﻿# cross-workspace v1.0 重做架构（rewrite/v1.0）
+# cross-workspace v1.0 重做架构（rewrite/v1.0）
 
 > 目标：**不是再补 0.9.1**，而是从冻结候选 `c811d48` 起，client 从零重写；Host 内部允许
 > 抽模块，但 **store 数据、6 个 mail 工具、管理 API 路径与参数、投递语义保持不变**。
