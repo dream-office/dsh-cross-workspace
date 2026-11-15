@@ -340,6 +340,15 @@ describe('v1 rewrite client skeleton', () => {
     assert.equal(signature, env.plugin.__test.stateSignature(data))
     const changed = Object.assign({}, data, { messages: [Object.assign({}, data.messages[0], { read: true }), data.messages[1]] })
     assert.notEqual(signature, env.plugin.__test.stateSignature(changed))
+    const runningSession = JSON.parse(JSON.stringify(data))
+    runningSession.workspaces[0].sessions[0].running = true
+    assert.notEqual(signature, env.plugin.__test.stateSignature(runningSession))
+    const renamedSession = JSON.parse(JSON.stringify(data))
+    renamedSession.workspaces[0].sessions[0].title = 'Renamed'
+    assert.notEqual(signature, env.plugin.__test.stateSignature(renamedSession))
+    const changedMember = JSON.parse(JSON.stringify(data))
+    changedMember.groups[0].members[1].running = true
+    assert.notEqual(signature, env.plugin.__test.stateSignature(changedMember))
     assert.match(source, /visibilitychange/)
     assert.match(source, /document\.hasFocus/)
   })

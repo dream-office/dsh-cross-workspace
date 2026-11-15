@@ -386,8 +386,18 @@ window.__ModuleLoader__.load({
       const messages = Array.isArray(value.messages) ? value.messages.map(function (mail) {
         return [mail.id, mail.read === true, mail.editedAt || 0, mail.delivery && mail.delivery.mode, mail.delivery && mail.delivery.attempts]
       }) : []
-      const groups = Array.isArray(value.groups) ? value.groups.map(function (group) { return [group.id, group.name, group.unread, group.memberCount] }) : []
-      const workspaces = Array.isArray(value.workspaces) ? value.workspaces.map(function (workspace) { return [workspace.path, workspace.title, workspace.unread] }) : []
+      const groups = Array.isArray(value.groups) ? value.groups.map(function (group) {
+        const members = Array.isArray(group.members) ? group.members.map(function (member) {
+          return [member.sessionId, member.title, member.running, member.unread, member.blank, member.archived]
+        }) : []
+        return [group.id, group.name, group.unread, group.memberCount, members]
+      }) : []
+      const workspaces = Array.isArray(value.workspaces) ? value.workspaces.map(function (workspace) {
+        const sessions = Array.isArray(workspace.sessions) ? workspace.sessions.map(function (session) {
+          return [session.sessionId, session.title, session.running, session.unread, session.blank, session.archived, session.updatedAt]
+        }) : []
+        return [workspace.path, workspace.title, workspace.unread, sessions]
+      }) : []
       return JSON.stringify({ viewer: value.viewer, stats: value.stats, messages: messages, groups: groups, workspaces: workspaces })
     }
 
