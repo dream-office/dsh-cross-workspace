@@ -48,7 +48,34 @@ function load(initialData, initialView, initialParams) {
     initialParams,
   }
   render()
-  return { plugin, get tree() { return tree }, render, props }
+  return {
+    plugin,
+    get tree() { return tree },
+    render,
+    props,
+    direct(component, componentProps) {
+      hooks.length = 0
+      cursor = 0
+      return component(componentProps)
+    },
+  }
+}
+
+function nodesOf(node) {
+  const out = []
+  const walk = current => {
+    if (!current) return
+    if (Array.isArray(current)) { current.forEach(walk); return }
+    if (typeof current !== 'object' || !current.props) return
+    out.push(current)
+    walk(current.props.children)
+  }
+  walk(node)
+  return out
+}
+
+function clickableByText(node, text) {
+  return nodesOf(node).find(item => item.props && typeof item.props.onClick === 'function' && JSON.stringify(item.props.children || '').includes(text))
 }
 
 function texts(node, out = []) {
@@ -129,9 +156,117 @@ describe('v1 rewrite client skeleton', () => {
     }
   })
 
+  it('wires dashboard KPI and table buttons', () => {
+    const env = load(data, 'dashboard')
+    const calls = []
+    const dashboard = env.direct(env.plugin.__test.DashboardView, {
+      t: (zh, en) => en, stats: data.stats, messages: data.messages, groups: data.groups, workspaces: data.workspaces,
+      range: 7, rows: 6, now: data.now, search: '',
+      onUnread() { calls.push('unread') }, onGroups() { calls.push('groups') }, onWorkspaces() { calls.push('workspaces') },
+      onGroup() {}, onAllMessages() { calls.push('all') }, onMoreRows() { calls.push('more') },
+      onOpen(mail) { calls.push('open:' + mail.id) }, onRetry() {}, onNew() {},
+    })
+    nodesOf(dashboard).filter(node => node.props && typeof node.props.onClick === 'function' && typeof node.props.label === 'string').forEach(node => node.props.onClick())
+    clickableByText(dashboard, 'All messages').props.onClick()
+    nodesOf(dashboard).find(node => node.props && node.props.className === 'cw-subject' && JSON.stringify(node.props.children).includes('Unread')).props.onClick()
+    assert.deepEqual(calls.sort(), ['all', 'groups', 'open:m1', 'unread', 'workspaces'])
+  })
+
+  it('wires messages and detail buttons', () => {
+    const env = load(data, 'messages')
+    const calls = []
+    const messages = env.direct(env.plugin.__test.MessagesView, {
+      t: (zh, en) => en, messages: data.messages, search: '', filter: 'unread', now: data.now,
+      onOpen(mail) { calls.push('open:' + mail.id) }, onBack() { calls.push('back') },
+    })
+    const rows = nodesOf(messages).filter(node => node.props && node.props.className && String(node.props.className).includes('cw-row'))
+    assert.equal(rows.length, 1)
+    rows[0].props.onClick()
+    clickableByText(messages, 'Dashboard').props.onClick()
+    assert.deepEqual(calls, ['open:m1', 'back'])
+
+    const detailCalls = []
+    const detail = env.direct(env.plugin.__test.DetailView, {
+      t: (zh, en) => en, mail: data.messages[1],
+      onBack() { detailCalls.push('back') }, onReply() { detailCalls.push('reply') },
+      onMark() { detailCalls.push('mark') }, onRetry() { detailCalls.push('retry') },
+    })
+    clickableByText(detail, 'Reply').props.onClick()
+    clickableByText(detail, 'Mark unread').props.onClick()
+    clickableByText(detail, 'Retry').props.onClick()
+    assert.deepEqual(detailCalls, ['reply', 'mark', 'retry'])
+  })
+
+  it('wires groups and workspaces page buttons', () => {
+    const env = load(data, 'groups')
+    const calls = []
+    const groups = env.direct(env.plugin.__test.GroupsView, {
+      t: (zh, en) => en, groups: data.groups,
+      onBack() { calls.push('back') }, onCreate() { calls.push('create') },
+      onOpen(group) { calls.push('open:' + group.id) }, onEdit(group) { calls.push('edit:' + group.id) },
+    })
+    clickableByText(groups, 'New group').props.onClick()
+    clickableByText(groups, 'Group').props.onClick()
+    clickableByText(groups, 'Edit').props.onClick()
+    clickableByText(groups, 'Dashboard').props.onClick()
+    assert.deepEqual(calls, ['create', 'open:g1', 'edit:g1', 'back'])
+
+    const workspaceCalls = []
+    const workspaces = env.direct(env.plugin.__test.WorkspacesView, {
+      t: (zh, en) => en, workspaces: data.workspaces,
+      onBack() { workspaceCalls.push('back') },
+      onWorkspace(workspace) { workspaceCalls.push('ws:' + workspace.path) },
+      onSession(workspace, session) { workspaceCalls.push('session:' + session.sessionId) },
+    })
+    clickableByText(workspaces, 'Workspace').props.onClick()
+    clickableByText(workspaces, 'Me').props.onClick()
+    assert.deepEqual(workspaceCalls, ['ws:D:\\ws', 'session:s-me'])
+  })
+
+  it('wires graph and settings page buttons', () => {
+    const env = load(data, 'graph')
+    const calls = []
+    const graph = env.direct(env.plugin.__test.GraphView, {
+      t: (zh, en) => en, messages: data.messages,
+      onBack() { calls.push('back') }, onOpen(mail) { calls.push('open:' + mail.id) },
+    })
+    clickableByText(graph, 'Other').props.onClick()
+    clickableByText(graph, 'Me').props.onClick()
+    assert.deepEqual(calls, ['open:m1', 'back'])
+
+    const settingsCalls = []
+    const settings = env.direct(env.plugin.__test.SettingsView, {
+      t: (zh, en) => en,
+      onBack() { settingsCalls.push('back') }, onOpen() { settingsCalls.push('open') },
+    })
+    clickableByText(settings, 'Open settings').props.onClick()
+    clickableByText(settings, 'Dashboard').props.onClick()
+    assert.deepEqual(settingsCalls, ['open', 'back'])
+  })
+
+  it('wires topbar new/theme/menu handlers', () => {
+    const env = load(data, 'dashboard')
+    const themeButton = nodesOf(env.tree).find(node => node.props && node.props['aria-label'] === 'Toggle theme')
+    assert.ok(themeButton)
+    themeButton.props.onClick()
+    assert.ok(texts(env.tree).includes('☀') || texts(env.tree).includes('☾'))
+    clickableByText(env.tree, 'New message').props.onClick()
+    assert.ok(texts(env.tree).some(value => value.indexOf('view=compose') >= 0))
+    const menuButton = nodesOf(env.tree).find(node => node.props && node.props['aria-label'] === 'More')
+    if (menuButton) {
+      menuButton.props.onClick()
+      assert.ok(nodesOf(env.tree).some(node => node.props && node.props.role === 'menu'))
+    }
+  })
+
   it('keeps explicit buttons and no empty handlers in source', () => {
     assert.doesNotMatch(source, /onClick:\s*function\s*\(\)\s*\{\s*\}/)
     assert.match(source, /function navigate\(/)
-    assert.match(source, /BUILD_STAMP = '1\.0\.0-rewrite /)
+    assert.match(source, /BUILD_STAMP = '1\.0\.0-rewrite [0-9a-f]+'/)
+    assert.match(source, /data-theme/)
+    assert.match(source, /dshcw-theme/)
+    assert.match(source, /prefers-reduced-motion/)
+    assert.match(source, /max-width:860px/)
+    assert.match(source, /requestAnimationFrame/)
   })
 })

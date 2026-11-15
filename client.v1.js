@@ -13,7 +13,7 @@ window.__ModuleLoader__.load({
     const API_HEADERS = { 'content-type': 'application/json', 'x-dsh-cross-workspace': '1' }
     const LIMIT = 300
     const POLL_MS = 4000
-    const BUILD_STAMP = '1.0.0-rewrite 6de2823'
+    const BUILD_STAMP = '1.0.0-rewrite 7d24f28'
 
     async function apiCall(action, payload, signal) {
       if (typeof fetch !== 'function') throw new Error('fetch is unavailable in this shell')
@@ -717,6 +717,7 @@ window.__ModuleLoader__.load({
         try { return window.localStorage.getItem('dshcw-theme') === 'light' ? 'light' : 'dark' } catch (e) { return 'dark' }
       })
       const [menuOpen, setMenuOpen] = React.useState(false)
+      const newButtonRef = React.useRef(null)
       const [scopeWorkspacePath, setScopeWorkspacePath] = React.useState(null)
       const [scopeGroupId, setScopeGroupId] = React.useState(null)
       const [viewerSessionId, setViewerSessionId] = React.useState(mySessionId)
@@ -756,7 +757,14 @@ window.__ModuleLoader__.load({
       function navigate(next, nextParams) {
         setView(next); setParams(nextParams || {}); setMenuOpen(false); setNotice('')
       }
-      function back() { navigate('dashboard') }
+      function back() {
+        navigate('dashboard')
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(function () {
+            if (newButtonRef.current && typeof newButtonRef.current.focus === 'function') newButtonRef.current.focus()
+          })
+        }
+      }
       function openMessage(mail) {
         if (!mail) return
         navigate('detail', { messageId: mail.id })
@@ -864,7 +872,7 @@ window.__ModuleLoader__.load({
               })),
             h('input', { className: 'cw-input', style: { width: 160 }, value: search, placeholder: t('搜索消息…', 'Search messages…'), 'aria-label': t('搜索消息', 'Search messages'), onChange: function (event) { setSearch(event.target.value) } }),
             h(Button, { onClick: function () { void load(true); setNotice(t('已刷新。', 'Refreshed.')) } }, t('刷新', 'Refresh')),
-            h(Button, { variant: 'primary', onClick: function () { openCompose(null) } }, t('新消息', 'New message')),
+            h(Button, { variant: 'primary', buttonRef: newButtonRef, onClick: function () { openCompose(null) } }, t('新消息', 'New message')),
             h('button', { type: 'button', className: 'cw-icon', 'aria-label': t('切换主题', 'Toggle theme'), title: t('切换主题', 'Toggle theme'), onClick: function () { setTheme(theme === 'dark' ? 'light' : 'dark') } }, theme === 'dark' ? '☀' : '☾'),
             h('div', { style: { position: 'relative', flex: 'none' } },
               h('button', { type: 'button', className: 'cw-icon', 'aria-label': t('更多', 'More'), 'aria-haspopup': 'menu', 'aria-expanded': menuOpen, onClick: function () { setMenuOpen(!menuOpen) } }, '⋯'),
@@ -923,6 +931,6 @@ window.__ModuleLoader__.load({
       })
     }
 
-    return { inject: ['slots', 'locale'], apply: apply, __test: { App: App, DashboardView: DashboardView, MessagesView: MessagesView, GroupsView: GroupsView, WorkspacesView: WorkspacesView, ComposeView: ComposeView, GroupEditorView: GroupEditorView, SettingsView: SettingsView, BUILD_STAMP: BUILD_STAMP } }
+    return { inject: ['slots', 'locale'], apply: apply, __test: { App: App, DashboardView: DashboardView, MessagesView: MessagesView, DetailView: DetailView, GroupsView: GroupsView, WorkspacesView: WorkspacesView, GraphView: GraphView, ComposeView: ComposeView, GroupEditorView: GroupEditorView, SettingsView: SettingsView, BUILD_STAMP: BUILD_STAMP } }
   },
 })
