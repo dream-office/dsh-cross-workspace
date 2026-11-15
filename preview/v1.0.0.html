@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>跨工作区信使 · v1.0 rewrite preview</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:#f7f8fa;--card:#ffffff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--soft:#f3f4f6;
+  --accent:#00A2BD;--on-accent:#0B1A1F;--accent-ink:#006B7D;--accent-soft:#E6F7FA;--accent-2:#3B82F6;
+  --ok:#15803d;--warn:#b45309;--bad:#b91c1c;--mail:#2563eb;--none:#6b7280;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#111827;--card:#1f2937;--text:#f9fafb;--muted:#9ca3af;--border:#374151;--soft:#273244;
+  --accent:#4FC3D9;--on-accent:#0B1A1F;--accent-ink:#7DD8E8;--accent-soft:rgba(79,195,217,.16);--accent-2:#7FB2FF;
+  --ok:#4ADE80;--warn:#FBBF24;--bad:#F87171;--mail:#9CA3AF;--none:#9CA3AF;
+}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{max-width:1280px;margin:0 auto;min-height:100%;padding:16px 16px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.title{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.title h1{font-size:20px;line-height:26px;margin:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stamp{font:11px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--accent-ink);border:1px solid var(--accent);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.scope{font-size:10px;color:var(--muted);white-space:nowrap}
+.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.seg button{min-height:28px;border:0;background:transparent;padding:0 9px;font-size:11px;color:var(--muted)}
+.seg button.on{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.input{min-height:32px;border:1px solid var(--border);border-radius:10px;background:var(--card);padding:0 10px;font-size:12px;min-width:0}
+.btn{min-height:32px;border:1px solid var(--border);border-radius:10px;background:var(--card);padding:0 12px;font-size:12px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn:focus-visible,.input:focus-visible,.kpi:focus-visible,.row:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.view{display:none;flex-direction:column;gap:12px;min-width:0}
+.view.on{display:flex}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kpi{border:1px solid var(--border);border-radius:20px;background:var(--card);padding:16px;display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0}
+.kpi .label{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi strong{font-size:24px;line-height:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .hint{font-size:10px;color:var(--muted)}
+.kpi.click:hover{border-color:var(--accent)}
+.kpi.danger strong{color:var(--bad)}
+.kpi.accent strong{color:var(--accent-ink)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;min-width:0}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-width:0}
+.card{border:1px solid var(--border);border-radius:20px;background:var(--card);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;overflow:hidden}
+.head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.head h2{font-size:13px;line-height:18px;margin:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head span,.head button{font-size:10px;color:var(--muted)}
+.link{border:0;background:transparent;color:var(--accent-ink);font-size:11px;padding:0;white-space:nowrap}
+.bars{display:flex;align-items:flex-end;gap:8px;height:138px;min-height:138px;padding-top:4px}
+.bar-day{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bar-pair{flex:1;width:100%;display:flex;align-items:flex-end;gap:2px;min-height:0}
+.bar-pair i{flex:1;display:block;border-radius:3px 3px 0 0;min-height:2px}
+.recv{background:var(--accent)}.sent{background:var(--accent-2)}
+.bar-day b{font-size:10px;color:var(--muted);font-weight:400}.bar-day em{font-size:10px;color:var(--text);font-style:normal;font-variant-numeric:tabular-nums}
+.donut-wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.donut{width:132px;height:132px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;position:relative;background:conic-gradient(var(--ok) 0 57%,var(--warn) 57% 60%,var(--bad) 60% 64%,var(--mail) 64% 67%,var(--none) 67% 100%)}
+.donut:after{content:"";position:absolute;inset:18px;border-radius:50%;background:var(--card)}
+.donut div{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
+.donut strong{font-size:18px;font-variant-numeric:tabular-nums}.donut span{font-size:10px;color:var(--muted)}
+.legend{display:grid;gap:5px;min-width:0;flex:1}
+.legend div{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);min-width:0}
+.legend i{width:8px;height:8px;border-radius:2px;flex:none}.legend b{margin-left:auto;color:var(--text);font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center;gap:8px;min-height:32px;border:0;border-radius:8px;background:transparent;padding:0 4px;text-align:left;font-size:11px;color:var(--muted);min-width:0}
+.row:hover{background:var(--soft);color:var(--text)}.row .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini{width:70px;height:8px;border-radius:999px;background:var(--soft);overflow:hidden;flex:none}.mini i{display:block;height:100%;background:var(--accent)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stats div{display:flex;flex-direction:column;gap:1px;padding:8px;border-radius:12px;background:var(--soft);min-width:0}
+.stats strong{font-size:16px;font-variant-numeric:tabular-nums}.stats span{font-size:10px;color:var(--muted)}
+.table{display:flex;flex-direction:column;min-width:0}
+.tr{display:grid;grid-template-columns:74px minmax(90px,1fr) minmax(120px,2.4fr) 88px 56px;gap:8px;align-items:center;min-height:38px;border-bottom:1px solid var(--border);font-size:11px;min-width:0}
+.th{font-size:10px;color:var(--muted);min-height:26px}
+.subject{border:0;background:transparent;padding:0;text-align:left;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 7px;font-size:10px;background:var(--soft);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}.dot.mail{background:var(--mail)}
+.list{display:flex;flex-direction:column;gap:8px}
+.list .row{border:1px solid var(--border);background:var(--card);padding:10px 12px;border-radius:12px;min-height:46px;color:var(--text)}
+.list .row small{display:block;color:var(--muted);font-size:10px}
+.empty{border:1px dashed var(--border);border-radius:12px;padding:18px;color:var(--muted);font-size:12px}
+.notice{display:none;border:1px solid var(--accent);border-radius:12px;background:var(--accent-soft);color:var(--accent-ink);padding:8px 10px;font-size:12px}
+.notice.on{display:block}
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(17,24,39,.36);display:none;align-items:flex-end;justify-content:center;padding:20px}
+.overlay.on{display:flex}
+.sheet{width:min(420px,100%);max-height:78vh;overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.sheet h2{margin:0;font-size:15px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted)}
+.field input,.field select,.field textarea{min-height:36px;border:1px solid var(--border);border-radius:10px;background:var(--bg);padding:8px 10px;font-size:12px;color:var(--text)}
+.field textarea{min-height:110px;resize:vertical}
+.sheet-actions{display:flex;justify-content:flex-end;gap:8px}
+.detail{border:1px solid var(--border);border-radius:12px;background:var(--card);padding:16px;display:flex;flex-direction:column;gap:10px}
+.detail h2{margin:0;font-size:16px}.detail p{margin:0;color:var(--muted);white-space:pre-wrap}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.graph{height:280px;border:1px solid var(--border);border-radius:12px;background:var(--card);position:relative;overflow:hidden}
+.graph svg{width:100%;height:100%}
+.graph .node{position:absolute;transform:translate(-50%,-50%);border:1px solid var(--border);border-radius:999px;background:var(--card);padding:6px 10px;font-size:11px}
+.graph .node.main{border-color:var(--accent);color:var(--accent-ink)}
+.log{font:10px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;max-height:90px;overflow:auto}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi:nth-child(n+5){display:none}.actions{width:100%}.actions .input{flex:1 1 140px;width:100%}.tr{grid-template-columns:1fr auto;gap:3px 8px;padding:8px 0}.th{display:none}.tr span:nth-child(1){grid-column:1;font-size:10px}.tr span:nth-child(4){grid-column:2;grid-row:1}.tr span:nth-child(2){grid-column:1}.tr span:nth-child(5){grid-column:2;grid-row:2}.subject{grid-column:1/-1;white-space:normal;overflow-wrap:anywhere}.title h1{font-size:18px}.stamp{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title">
+      <h1>跨工作区信使</h1>
+      <span class="stamp" id="stamp">1.0.0-rewrite c811d48-preview</span>
+      <span class="scope">按本地保留范围</span>
+    </div>
+    <div class="actions">
+      <div class="seg" id="range" role="group" aria-label="时间范围">
+        <button data-range="1">今天</button><button data-range="7" class="on">近7天</button><button data-range="30">近30天</button>
+      </div>
+      <input class="input" id="search" placeholder="搜索消息…" aria-label="搜索消息" style="width:170px">
+      <button class="btn" id="refresh">刷新</button>
+      <button class="btn primary" id="new">新消息</button>
+      <button class="btn ghost" id="more" aria-haspopup="true">⋯</button>
+    </div>
+  </header>
+  <div class="notice" id="notice" role="status"></div>
+
+  <section class="view on" id="view-dashboard">
+    <div class="kpis">
+      <button class="kpi click accent" data-go="messages" data-filter="unread"><span class="label">未读</span><strong>7</strong><span class="hint">点击查看</span></button>
+      <div class="kpi"><span class="label">已发出</span><strong>11</strong><span class="hint">近7天</span></div>
+      <div class="kpi danger"><span class="label">失败待重试</span><strong>2</strong><span class="hint">近7天</span></div>
+      <button class="kpi click" data-go="groups"><span class="label">群组</span><strong>4</strong><span class="hint">点击查看</span></button>
+      <button class="kpi click" data-go="workspaces"><span class="label">工作区</span><strong>6</strong><span class="hint">点击查看</span></button>
+      <div class="kpi"><span class="label">成功率</span><strong>96%</strong><span class="hint">近7天</span></div>
+    </div>
+    <div class="grid2">
+      <section class="card">
+        <div class="head"><h2>近 7 天收发量</h2><span>收 / 发</span></div>
+        <div class="bars" id="bars"></div>
+      </section>
+      <section class="card">
+        <div class="head"><h2>投递状态分布</h2><span>按消息计</span></div>
+        <div class="donut-wrap">
+          <div class="donut"><div><strong>96%</strong><span>成功率</span></div></div>
+          <div class="legend">
+            <div><i style="background:var(--ok)"></i><span class="grow">已投递</span><b>132</b></div>
+            <div><i style="background:var(--warn)"></i><span class="grow">排队</span><b>4</b></div>
+            <div><i style="background:var(--bad)"></i><span class="grow">失败</span><b>2</b></div>
+            <div><i style="background:var(--mail)"></i><span class="grow">信箱</span><b>0</b></div>
+            <div><i style="background:var(--none)"></i><span class="grow">无目标</span><b>0</b></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="grid3">
+      <section class="card"><div class="head"><h2>群组</h2><button class="link" data-go="groups">管理 →</button></div>
+        <button class="row" data-group="g1"><span class="grow">前端联调</span><span>2 未读</span></button>
+        <button class="row" data-group="g2"><span class="grow">接口评审</span><span>0 未读</span></button>
+        <button class="row" data-group="g3"><span class="grow">发布协调</span><span>1 未读</span></button>
+      </section>
+      <section class="card"><div class="head"><h2>工作区消息量</h2><button class="link" data-go="workspaces">查看 →</button></div>
+        <div class="row"><span class="grow">跨工作区信使</span><span class="mini"><i style="width:80%"></i></span><b>8</b></div>
+        <div class="row"><span class="grow">设计系统</span><span class="mini"><i style="width:55%"></i></span><b>5</b></div>
+        <div class="row"><span class="grow">个人站点</span><span class="mini"><i style="width:30%"></i></span><b>3</b></div>
+      </section>
+      <section class="card"><div class="head"><h2>消息量</h2><span>近7天 · 总 27</span></div>
+        <div class="stats"><div><strong>0</strong><span>信箱</span></div><div><strong>2</strong><span>失败</span></div><div><strong>4</strong><span>排队</span></div><div><strong>0</strong><span>无目标</span></div></div>
+      </section>
+    </div>
+    <section class="card">
+      <div class="head"><h2>最近消息</h2><div style="display:flex;gap:10px"><button class="link" data-go="messages">全部消息 →</button><button class="link" id="more-rows">查看更多</button></div></div>
+      <div class="table" id="recent"></div>
+    </section>
+  </section>
+
+  <section class="view" id="view-messages">
+    <div class="top"><button class="btn ghost" data-go="dashboard">← 仪表盘</button><h2 style="margin:0;font-size:16px;flex:1">消息</h2><span class="pill" id="filter-label">未读</span></div>
+    <div class="list" id="message-list"></div>
+  </section>
+
+  <section class="view" id="view-groups">
+    <div class="top"><button class="btn ghost" data-go="dashboard">← 仪表盘</button><h2 style="margin:0;font-size:16px;flex:1">群组</h2><button class="btn primary" id="new-group">新建群组</button></div>
+    <div class="list" id="group-list"></div>
+  </section>
+
+  <section class="view" id="view-workspaces">
+    <div class="top"><button class="btn ghost" data-go="dashboard">← 仪表盘</button><h2 style="margin:0;font-size:16px;flex:1">工作区</h2></div>
+    <div class="list" id="workspace-list"></div>
+  </section>
+
+  <section class="view" id="view-graph">
+    <div class="top"><button class="btn ghost" data-go="dashboard">← 仪表盘</button><h2 style="margin:0;font-size:16px;flex:1">交流图</h2></div>
+    <div class="card"><div class="graph"><svg viewBox="0 0 600 280" aria-hidden="true"><line x1="300" y1="140" x2="120" y2="70" stroke="var(--border)"/><line x1="300" y1="140" x2="480" y2="80" stroke="var(--border)"/><line x1="300" y1="140" x2="470" y2="210" stroke="var(--border)"/></svg>
+      <button class="node main" style="left:50%;top:50%" data-node="m1">我</button>
+      <button class="node" style="left:20%;top:25%" data-node="m2">前端联调</button>
+      <button class="node" style="left:80%;top:28%" data-node="m3">设计系统</button>
+      <button class="node" style="left:78%;top:75%" data-node="m4">个人站点</button>
+    </div></div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="top"><button class="btn ghost" data-go="dashboard">← 仪表盘</button><h2 style="margin:0;font-size:16px;flex:1">设置</h2></div>
+    <div class="card"><p style="margin:0;font-size:12px;color:var(--muted)">预览不接 Host。真实面板会打开 Harness 设置页的「跨工作区信使」分节；没有 shell API 时显示提示。</p><button class="btn" data-action="settings">打开设置</button></div>
+  </section>
+
+  <section class="view" id="view-detail">
+    <div class="top"><button class="btn ghost" id="detail-back">← 消息</button><h2 style="margin:0;font-size:16px;flex:1">消息详情</h2></div>
+    <div class="detail" id="detail-card"></div>
+  </section>
+
+  <div class="log" id="log">操作日志：</div>
+</div>
+
+<div class="overlay" id="compose">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="compose-title">
+    <h2 id="compose-title">新消息</h2>
+    <label class="field">收件人<select id="recipient"><option>群组 · 前端联调</option><option>工作区 · 设计系统</option><option>会话 · 发布协调</option></select></label>
+    <label class="field">主题<input id="subject" value="v1.0 预览"></label>
+    <label class="field">正文<textarea id="body">这是 v1.0 rewrite 预览的假数据，不写入任何 store。</textarea></label>
+    <div class="sheet-actions"><button class="btn" id="cancel-compose">取消</button><button class="btn primary" id="send">发送</button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var BUILD_STAMP = '1.0.0-rewrite c811d48-preview';
+  document.getElementById('stamp').textContent = BUILD_STAMP;
+  var logEl = document.getElementById('log');
+  var noticeEl = document.getElementById('notice');
+  var currentView = 'dashboard';
+  var currentFilter = 'all';
+  var messageRows = 6;
+  var sourceMessage = null;
+
+  var messages = [
+    { id: 'm1', from: '设计系统', subject: 'v4 仪表盘间距确认', status: 'ok', statusLabel: '已投递', time: '10:24', read: false },
+    { id: 'm2', from: '前端联调', subject: '群组消息只发给发送时成员', status: 'warn', statusLabel: '排队', time: '10:02', read: false },
+    { id: 'm3', from: '个人站点', subject: '部署回滚完成', status: 'bad', statusLabel: '失败', time: '09:41', read: true },
+    { id: 'm4', from: '设计系统', subject: '320 宽度截图', status: 'mail', statusLabel: '信箱', time: '昨天', read: false },
+    { id: 'm5', from: '发布协调', subject: '今晚不发 0.9.0', status: 'ok', statusLabel: '已投递', time: '昨天', read: true },
+    { id: 'm6', from: '前端联调', subject: '接口字段冻结', status: 'ok', statusLabel: '已投递', time: '昨天', read: false }
+  ];
+  var groups = [
+    { id: 'g1', name: '前端联调', members: 4, unread: 2 },
+    { id: 'g2', name: '接口评审', members: 3, unread: 0 },
+    { id: 'g3', name: '发布协调', members: 5, unread: 1 }
+  ];
+  var workspaces = [
+    { id: 'w1', name: '跨工作区信使', unread: 8, sessions: 5 },
+    { id: 'w2', name: '设计系统', unread: 5, sessions: 3 },
+    { id: 'w3', name: '个人站点', unread: 3, sessions: 2 }
+  ];
+
+  function log(text) {
+    logEl.textContent = '操作日志：' + text + ' · view=' + currentView;
+  }
+  function showNotice(text) {
+    noticeEl.textContent = text;
+    noticeEl.classList.add('on');
+    window.clearTimeout(showNotice.timer);
+    showNotice.timer = window.setTimeout(function () { noticeEl.classList.remove('on'); }, 2400);
+  }
+  function show(view) {
+    currentView = view;
+    ['dashboard', 'messages', 'groups', 'workspaces', 'graph', 'settings', 'detail'].forEach(function (name) {
+      var el = document.getElementById('view-' + name);
+      if (el) el.classList.toggle('on', name === view);
+    });
+    log('切换到 ' + view);
+    if (view === 'messages') renderMessages();
+    if (view === 'groups') renderGroups();
+    if (view === 'workspaces') renderWorkspaces();
+  }
+  function goMessages(filter) {
+    currentFilter = filter || 'all';
+    document.getElementById('filter-label').textContent = currentFilter === 'unread' ? '未读' : (currentFilter === 'all' ? '全部' : currentFilter);
+    show('messages');
+  }
+  function renderRecent() {
+    var root = document.getElementById('recent');
+    root.innerHTML = '<div class="tr th"><span>时间</span><span>来源</span><span>主题</span><span>状态</span><span></span></div>';
+    var rows = messages.slice(0, messageRows);
+    if (!rows.length) { root.innerHTML += '<div class="empty">没有匹配的消息</div>'; return; }
+    rows.forEach(function (mail) {
+      var row = document.createElement('div');
+      row.className = 'tr';
+      row.innerHTML = '<span style="color:var(--muted)">' + mail.time + '</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + mail.from + '</span><button class="subject">' + mail.subject + '</button><span><span class="pill"><i class="dot ' + mail.status + '"></i>' + mail.statusLabel + '</span></span><span>' + (mail.status === 'bad' ? '<button class="link">重试</button>' : '') + '</span>';
+      row.querySelector('.subject').addEventListener('click', function () { openDetail(mail); });
+      var retry = row.querySelector('.link');
+      if (retry) retry.addEventListener('click', function () { showNotice('已重试：' + mail.subject); log('重试 ' + mail.id); });
+      root.appendChild(row);
+    });
+  }
+  function renderMessages() {
+    var root = document.getElementById('message-list');
+    var list = messages.filter(function (mail) { return currentFilter !== 'unread' || !mail.read; });
+    root.innerHTML = list.length ? '' : '<div class="empty">没有未读消息</div>';
+    list.forEach(function (mail) {
+      var row = document.createElement('button');
+      row.className = 'row';
+      row.innerHTML = '<span class="grow">' + mail.subject + '<small>' + mail.from + ' · ' + mail.time + '</small></span><span class="pill"><i class="dot ' + mail.status + '"></i>' + mail.statusLabel + '</span>';
+      row.addEventListener('click', function () { openDetail(mail); });
+      root.appendChild(row);
+    });
+  }
+  function renderGroups() {
+    var root = document.getElementById('group-list');
+    root.innerHTML = '';
+    groups.forEach(function (group) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = '<button class="grow" style="border:0;background:transparent;text-align:left">' + group.name + '<small>' + group.members + ' 位成员 · ' + group.unread + ' 未读</small></button><button class="btn ghost">编辑</button>';
+      var buttons = row.querySelectorAll('button');
+      buttons[0].addEventListener('click', function () { showNotice('打开群组：' + group.name); log('选择群组 ' + group.id); goMessages('all'); });
+      buttons[1].addEventListener('click', function () { showNotice('编辑群组：' + group.name); log('编辑群组 ' + group.id); });
+      root.appendChild(row);
+    });
+  }
+  function renderWorkspaces() {
+    var root = document.getElementById('workspace-list');
+    root.innerHTML = '';
+    workspaces.forEach(function (workspace) {
+      var row = document.createElement('button');
+      row.className = 'row';
+      row.innerHTML = '<span class="grow">' + workspace.name + '<small>' + workspace.sessions + ' 个会话 · ' + workspace.unread + ' 未读</small></span><span>查看 →</span>';
+      row.addEventListener('click', function () { showNotice('打开工作区：' + workspace.name); log('选择工作区 ' + workspace.id); goMessages('unread'); });
+      root.appendChild(row);
+    });
+  }
+  function renderBars() {
+    var root = document.getElementById('bars');
+    var values = [[12, 4], [8, 3], [14, 6], [9, 2], [16, 5], [11, 4], [7, 2]];
+    var labels = ['11-09', '11-10', '11-11', '11-12', '11-13', '11-14', '11-15'];
+    var max = 20;
+    root.innerHTML = '';
+    values.forEach(function (pair, index) {
+      var div = document.createElement('div');
+      div.className = 'bar-day';
+      div.innerHTML = '<div class="bar-pair"><i class="recv" style="height:' + Math.max(2, pair[0] / max * 100) + '%"></i><i class="sent" style="height:' + Math.max(2, pair[1] / max * 100) + '%"></i></div><b>' + labels[index] + '</b><em>' + (pair[0] + pair[1]) + '</em>';
+      root.appendChild(div);
+    });
+  }
+  function openDetail(mail) {
+    sourceMessage = mail;
+    var card = document.getElementById('detail-card');
+    card.innerHTML = '<h2>' + mail.subject + '</h2><div class="pill"><i class="dot ' + mail.status + '"></i>' + mail.statusLabel + '</div><p>来自 ' + mail.from + ' · ' + mail.time + '\n\n这是预览假数据正文。真实 client 会从 state.messages 读取。</p><div class="detail-actions"><button class="btn primary" id="reply">回复</button><button class="btn" id="mark-read">标记已读</button><button class="btn" id="retry">重试</button></div>';
+    card.querySelector('#reply').addEventListener('click', function () { openCompose(mail); });
+    card.querySelector('#mark-read').addEventListener('click', function () { mail.read = true; showNotice('已标记已读'); log('标记已读 ' + mail.id); });
+    card.querySelector('#retry').addEventListener('click', function () { showNotice('已重试：' + mail.subject); log('重试 ' + mail.id); });
+    show('detail');
+  }
+  function openCompose(mail) {
+    sourceMessage = mail || null;
+    document.getElementById('subject').value = mail ? ('Re: ' + mail.subject) : 'v1.0 预览';
+    document.getElementById('compose').classList.add('on');
+    log('打开发送抽屉');
+  }
+  function closeCompose() {
+    document.getElementById('compose').classList.remove('on');
+    log('关闭发送抽屉');
+    document.getElementById('new').focus();
+  }
+
+  document.addEventListener('click', function (event) {
+    var target = event.target.closest('[data-go]');
+    if (target) {
+      var view = target.getAttribute('data-go');
+      if (view === 'messages') goMessages(target.getAttribute('data-filter') || 'all');
+      else show(view);
+      return;
+    }
+    var group = event.target.closest('[data-group]');
+    if (group) { showNotice('打开群组：' + group.textContent.trim()); log('KPI 群组 ' + group.getAttribute('data-group')); goMessages('all'); return; }
+    var node = event.target.closest('[data-node]');
+    if (node) {
+      var fake = messages[0];
+      showNotice('交流图节点：' + node.textContent.trim());
+      log('点击图节点 ' + node.getAttribute('data-node'));
+      openDetail(fake);
+    }
+  });
+  document.getElementById('range').addEventListener('click', function (event) {
+    var button = event.target.closest('button[data-range]');
+    if (!button) return;
+    this.querySelectorAll('button').forEach(function (item) { item.classList.toggle('on', item === button); });
+    showNotice('时间范围：' + button.textContent);
+    log('时间范围 ' + button.getAttribute('data-range'));
+  });
+  document.getElementById('search').addEventListener('input', function () {
+    var query = this.value.trim().toLowerCase();
+    var matched = messages.filter(function (mail) { return (mail.subject + ' ' + mail.from).toLowerCase().includes(query); });
+    showNotice(query ? matched.length + ' 条结果' : '搜索已清空');
+    log('搜索 "' + this.value + '" → ' + matched.length + ' 条');
+  });
+  document.getElementById('refresh').addEventListener('click', function () { showNotice('已刷新（预览）'); log('刷新'); });
+  document.getElementById('new').addEventListener('click', function () { openCompose(null); });
+  document.getElementById('more').addEventListener('click', function () {
+    showNotice('更多：群组 / 工作区 / 交流图 / 设置');
+    log('更多菜单');
+  });
+  document.getElementById('more-rows').addEventListener('click', function () {
+    messageRows = messageRows >= 12 ? 20 : 12;
+    this.textContent = messageRows >= 20 ? '已全部展开' : '查看更多';
+    renderRecent();
+    log('展开到 ' + messageRows + ' 行');
+  });
+  document.getElementById('new-group').addEventListener('click', function () { showNotice('新建群组（预览）'); log('新建群组'); });
+  document.getElementById('cancel-compose').addEventListener('click', closeCompose);
+  document.getElementById('compose').addEventListener('click', function (event) { if (event.target === this) closeCompose(); });
+  document.getElementById('send').addEventListener('click', function () {
+    var subject = document.getElementById('subject').value.trim() || '（无主题）';
+    showNotice('已发送：' + subject + '（预览，不写入）');
+    log('发送 ' + subject);
+    closeCompose();
+  });
+  document.getElementById('detail-back').addEventListener('click', function () { goMessages(currentFilter); });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && document.getElementById('compose').classList.contains('on')) closeCompose();
+  });
+  document.querySelector('[data-action="settings"]').addEventListener('click', function () { showNotice('设置入口：Harness 设置页 → 跨工作区信使'); log('打开设置提示'); });
+
+  renderBars();
+  renderRecent();
+  renderMessages();
+  renderGroups();
+  renderWorkspaces();
+  log('预览已加载');
+})();
+</script>
+</body>
+</html>
