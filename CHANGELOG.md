@@ -21,8 +21,9 @@
 - **U2**：≥1100 桌面列表固定 340 + 详情右栏；<1100 详情改二级；返回/Esc 关闭详情并回焦原行。
 - **U3**：发送改为抽屉（桌面右侧 420；窄屏底部弹层），收件人改为搜索会话/群组/工作区 + 可删 chip；
   JSON 数据与唤醒/投递选项折叠到「高级」；Esc 关闭并回焦触发按钮。
-- **修复**：补上 U2/U3 引入的 `showSplitDetail` 声明，避免首屏 ReferenceError；契约测试加声明检查。
-- 测试：P0/P1/U1/U2/U3/F2 后 **205 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
+- **修复**：补上 U2/U3 引入的 `showSplitDetail` 声明，避免首屏 ReferenceError；新增无浏览器 render smoke test
+  真正调用 `ManagementPage`（fake React + fake slot ctx），能直接抓 ReferenceError。
+- 测试：P0/P1/U1/U2/U3/F2 后 **206 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
 - 未 push、未 Release；UI 阶段完成后统一 bump 0.9.0。
 
 ## 2026-11-08 · 0.8.5（恢复 private + 官方声明）

@@ -5087,6 +5087,9 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'locale'],
       apply: apply,
+      // Exposed for the no-browser render smoke test; the plugin loader ignores
+      // unknown properties and this does not add a slot or a network call.
+      __test: { ManagementPage: ManagementPage },
     }
   },
 })

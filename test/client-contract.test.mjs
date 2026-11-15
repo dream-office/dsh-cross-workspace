@@ -72,6 +72,44 @@ describe('client P0 contracts', () => {
     assert.match(client, /const showSplitDetail =/)
   })
 
+  it('renders ManagementPage once with fake React (catches ReferenceError)', () => {
+    const hooks = []
+    let cursor = 0
+    const fakeReact = {
+      createElement(type, props) { return { type, props: props || {} } },
+      useState(init) {
+        const index = cursor++
+        if (!(index in hooks)) hooks[index] = typeof init === 'function' ? init() : init
+        return [hooks[index], function () {}]
+      },
+      useRef(init) {
+        const index = cursor++
+        if (!(index in hooks)) hooks[index] = { current: init }
+        return hooks[index]
+      },
+      useMemo(fn) { return fn() },
+      useCallback(fn) { return fn },
+      useEffect() {},
+      useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot() },
+    }
+    let plugin
+    const windowObject = {
+      innerWidth: 1280,
+      addEventListener() {},
+      removeEventListener() {},
+      __ModuleLoader__: { load: entry => { plugin = entry.factory(() => fakeReact) } },
+    }
+    const source = client + '\n//# sourceURL=client.js'
+    const evaluate = new Function('window', 'document', 'console', 'setTimeout', 'clearTimeout', source)
+    evaluate(windowObject, undefined, console, setTimeout, clearTimeout)
+    assert.ok(plugin && plugin.__test && typeof plugin.__test.ManagementPage === 'function')
+    const tree = plugin.__test.ManagementPage({
+      ctx: { locale: null, get: () => undefined },
+      runtime: { controllers: new Set() },
+    })
+    assert.ok(tree && typeof tree === 'object')
+  })
+
   it('compose drawer searches recipients and folds advanced options', () => {
     assert.match(client, /收件人搜索/)
     assert.match(client, /function clearRecipient\(/)
