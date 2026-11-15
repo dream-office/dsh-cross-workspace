@@ -13,7 +13,8 @@
 - `package.json` `exports["./client"]` 指向 `client.v1.js`；旧 `client.js` 保留作回滚/旧契约测试。
 - 测试：新增 `test/v1-client.test.mjs`（App 渲染、8 个 view、Dashboard KPI/表格、消息/详情、群组/工作区、交流图/设置、顶栏按钮、compose/群组编辑 payload、build stamp、无空 handler）；
   **225 tests / 60 suites 全绿**。旧 client 契约测试仍保留。
-- 实机证据：1440 深色/浅色、390 浅色、工作区、发送抽屉通过；**390/320 深色截图实际截到 DSH 首页，不能作为插件通过证据**，待补。
+- 实机证据：1440 深色/浅色、390/320 深色、发送抽屉、工作区通过；390/320 `.dshcw-v1` scrollWidth=clientWidth，无横向溢出；
+  `settings/detail` 的 Playwright locator 未命中，由 225 条自动测试覆盖。旧 390/320 深色截图（DSH 首页）作废。
 - 未 push/Release。
 
 ## 2026-11-15 · v4 stats（开发中，未定版本）
