@@ -8,7 +8,7 @@
 > 当前只是可安装预览骨架，不是完整 v1 验收。
 
 - 新增 `client.v1.js`：单一顶层 `view`（dashboard/messages/groups/workspaces/graph/settings/compose/detail/groupEditor），
-  `navigate/back`，显式按钮 handler；build stamp `1.0.0-rewrite 0aa8a72`。
+  `navigate/back`，显式按钮 handler；build stamp `1.0.0-rewrite 6de2823`。
 - 深/浅色主题；KPI/7天/环形/三卡/消息表；消息、群组、工作区、交流图、设置、详情、发送抽屉、群组编辑。
 - `package.json` `exports["./client"]` 指向 `client.v1.js`；旧 `client.js` 保留作回滚/旧契约测试。
 - 测试：新增 `test/v1-client.test.mjs`（App 渲染、8 个 view、build stamp、无空 handler）；
