@@ -583,6 +583,24 @@ window.__ModuleLoader__.load({
       return narrow
     }
 
+    function useSplitViewport() {
+      const [split, setSplit] = React.useState(function () {
+        return typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth >= 1100
+      })
+      React.useEffect(function () {
+        if (typeof window === 'undefined') return undefined
+        function update() {
+          setSplit(typeof window.innerWidth === 'number' && window.innerWidth >= 1100)
+        }
+        update()
+        window.addEventListener('resize', update)
+        return function () {
+          window.removeEventListener('resize', update)
+        }
+      }, [])
+      return split
+    }
+
     function useApi(runtime) {
       const controllers = React.useRef(new Set())
       React.useEffect(function () {
@@ -1134,6 +1152,7 @@ window.__ModuleLoader__.load({
       const t = useText(ctx)
       const call = useApi(runtime)
       const narrow = useNarrowViewport()
+      const split = useSplitViewport()
       const sessionsSnapshot = useSessionsSnapshot(props)
       const browserSessionId = useUiWorkspaceSessionId(ctx)
       const mySessionId = sessionIdFromSessions(sessionsSnapshot) || browserSessionId
@@ -1195,6 +1214,15 @@ window.__ModuleLoader__.load({
           document.removeEventListener('mousedown', closeOnOutside)
         }
       }, [menuOpen])
+
+      React.useEffect(function () {
+        if (!detail) return undefined
+        function closeOnEscape(event) {
+          if (event.key === 'Escape') closeDetail()
+        }
+        document.addEventListener('keydown', closeOnEscape)
+        return function () { document.removeEventListener('keydown', closeOnEscape) }
+      }, [detail])
 
       React.useEffect(function () {
         uiBusyRef.current = !!(compose || groupEditor || detail)
@@ -1623,6 +1651,19 @@ window.__ModuleLoader__.load({
         })
       }
 
+      function closeDetail() {
+        const id = detail && detail.id
+        setDetail(null)
+        setEditing(null)
+        if (typeof document === 'undefined' || !id) return
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(function () {
+            const row = document.querySelector('[data-mail-id="' + id + '"]')
+            if (row && typeof row.focus === 'function') row.focus()
+          })
+        }
+      }
+
       function markUnread() {
         if (!detail) return
         const viewer = viewerPayload(mySessionId, data)
@@ -1734,6 +1775,49 @@ window.__ModuleLoader__.load({
         overflow: 'hidden',
       }
 
+      const messageListContent = h('div', { className: 'dshcw-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto' } },
+        (!data && loading)
+          ? h('div', { key: 'loading', style: { padding: 24, display: 'flex', justifyContent: 'center' } }, h(Spinner, { label: t('正在加载消息…', 'Loading messages…') }))
+          : (!data && error)
+            ? h('div', { key: 'error', style: { padding: 16 } },
+                h('div', { style: { fontSize: 12, color: 'var(--dsw-alias-state-error-primary)', marginBottom: 8, overflowWrap: 'anywhere' } }, error),
+                h(Button, { variant: 'outline', onClick: refreshNow }, t('重试', 'Retry')))
+            : messages.length === 0
+              ? h(EmptyState, {
+                  key: 'empty',
+                  title: filter === 'me'
+                    ? t('收件箱是空的', 'Your inbox is empty')
+                    : filter === 'sent'
+                      ? t('还没有已发送的消息', 'Nothing sent yet')
+                      : filter === 'unread'
+                        ? t('没有未读消息', 'No unread messages')
+                        : filter === 'broadcast'
+                          ? t('没有广播消息', 'No broadcast messages')
+                          : filter === 'group'
+                            ? t('这个群组还没有消息', 'No messages in this group yet')
+                            : t('还没有任何消息', 'No messages yet'),
+                  description: filter === 'sent'
+                    ? (mySessionId
+                        ? t('在这个会话里发出的消息会出现在这里。', 'Messages sent from the current session appear here.')
+                        : t('未选中会话时无法判断“已发送”，请先打开一个会话。', 'Without a selected session the sent view has no sender; open a session first.'))
+                    : filter === 'me' && !hasViewer
+                      ? t('未选中会话时收件箱为空；切换到「全部」可以按管理视角浏览所有消息。', 'With no session selected the inbox is empty; switch to “All” to browse every message from a management view.')
+                      : t('让 Agent 使用 mail_send 工具，或点击“新消息”发起一条跨工作区消息。', 'Ask an agent to use the mail_send tool, or click “New message” to start one.'),
+                })
+              : messages.map(function (mail) {
+                  return h(MessageRow, {
+                    key: mail.id,
+                    t: t,
+                    mail: mail,
+                    now: now,
+                    active: !!(detail && detail.id === mail.id),
+                    onOpen: openMessage,
+                    onRetry: retryMessage,
+                    retryingId: retryingId,
+                  })
+                })
+      )
+
       let rightContent = null
       if (groupEditor) {
         rightContent = h(GroupEditorView, {
@@ -1787,7 +1871,7 @@ window.__ModuleLoader__.load({
           groups: groups,
           sessionDirectory: sessionDirectory,
           allowWorkspaceBroadcast: settings.allowWorkspaceBroadcast === true,
-          onBack: function () { setDetail(null) },
+          onBack: closeDetail,
           onMarkUnread: markUnread,
           onWake: wakeDeliver,
           onReply: startReply,
@@ -1834,48 +1918,7 @@ window.__ModuleLoader__.load({
                 now: now,
                 onOpen: openMessage,
               })
-            : h('div', { className: 'dshcw-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto' } },
-            (!data && loading)
-              ? h('div', { key: 'loading', style: { padding: 24, display: 'flex', justifyContent: 'center' } }, h(Spinner, { label: t('正在加载消息…', 'Loading messages…') }))
-              : (!data && error)
-                ? h('div', { key: 'error', style: { padding: 16 } },
-                    h('div', { style: { fontSize: 12, color: 'var(--dsw-alias-state-error-primary)', marginBottom: 8, overflowWrap: 'anywhere' } }, error),
-                    h(Button, { variant: 'outline', onClick: refreshNow }, t('重试', 'Retry')))
-                : messages.length === 0
-                  ? h(EmptyState, {
-                      key: 'empty',
-                      title: filter === 'me'
-                        ? t('收件箱是空的', 'Your inbox is empty')
-                        : filter === 'sent'
-                          ? t('还没有已发送的消息', 'Nothing sent yet')
-                          : filter === 'unread'
-                            ? t('没有未读消息', 'No unread messages')
-                            : filter === 'broadcast'
-                              ? t('没有广播消息', 'No broadcast messages')
-                              : filter === 'group'
-                                ? t('这个群组还没有消息', 'No messages in this group yet')
-                                : t('还没有任何消息', 'No messages yet'),
-                      description: filter === 'sent'
-                        ? (mySessionId
-                            ? t('在这个会话里发出的消息会出现在这里。', 'Messages sent from the current session appear here.')
-                            : t('未选中会话时无法判断“已发送”，请先打开一个会话。', 'Without a selected session the sent view has no sender; open a session first.'))
-                        : filter === 'me' && !hasViewer
-                          ? t('未选中会话时收件箱为空；切换到「全部」可以按管理视角浏览所有消息。', 'With no session selected the inbox is empty; switch to “All” to browse every message from a management view.')
-                          : t('让 Agent 使用 mail_send 工具，或点击“新消息”发起一条跨工作区消息。', 'Ask an agent to use the mail_send tool, or click “New message” to start one.'),
-                    })
-                  : messages.map(function (mail) {
-                      return h(MessageRow, {
-                        key: mail.id,
-                        t: t,
-                        mail: mail,
-                        now: now,
-                        active: false,
-                        onOpen: openMessage,
-                        onRetry: retryMessage,
-                        retryingId: retryingId,
-                      })
-                    })
-          )
+            : messageListContent
         )
       }
 
@@ -2050,7 +2093,33 @@ window.__ModuleLoader__.load({
             onCreateGroup: startCreateGroup,
             onRetry: refreshNow,
           }),
-          h('section', { key: 'content', style: rightColumnStyle }, rightContent)
+          showSplitDetail
+            ? h('div', {
+                key: 'split',
+                style: {
+                  display: 'grid',
+                  gridTemplateColumns: '340px minmax(0, 1fr)',
+                  gap: 12,
+                  minWidth: 0,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                },
+              },
+                h('div', {
+                  style: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minWidth: 0,
+                    minHeight: 0,
+                    border: '1px solid var(--dsw-alias-border-l1)',
+                    borderRadius: '12px',
+                    background: 'var(--dsw-alias-bg-layer-1)',
+                    overflow: 'hidden',
+                  },
+                }, messageListContent),
+                h('section', { style: rightColumnStyle }, rightContent)
+              )
+            : h('section', { key: 'content', style: rightColumnStyle }, rightContent)
         )
       )
     }
@@ -3058,6 +3127,7 @@ window.__ModuleLoader__.load({
       return h('div', {
         role: 'button',
         tabIndex: 0,
+        'data-mail-id': mail.id,
         className: 'dshcw-row',
         onClick: function () { props.onOpen(mail) },
         onKeyDown: function (event) {

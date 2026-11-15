@@ -7,7 +7,7 @@
 - 插件版本：`0.8.5`
 - 最后同步：2026-11-08
 - 当前 store schema：`2`
-- 当前测试：202 tests / 58 suites（以仓库实际为准）
+- 当前测试：203 tests / 58 suites（以仓库实际为准）
 - 数据位置：`$DSH_HOME/cross-workspace/store.json` + `attachments/`
 
 ---

@@ -40,6 +40,13 @@ describe('client P0 contracts', () => {
     assert.match(client, /String\(item\.count\)/)
   })
 
+  it('splits list and detail at >=1100 and keeps a 340 list column', () => {
+    assert.match(client, /function useSplitViewport\(/)
+    assert.match(client, /gridTemplateColumns: '340px minmax\(0, 1fr\)'/)
+    assert.match(client, /function closeDetail\(/)
+    assert.match(client, /data-mail-id/)
+  })
+
   it('clear-read is described as fully-read-only', () => {
     assert.match(client, /仅删除全员已读/)
     assert.match(client, /Delete fully read/)
