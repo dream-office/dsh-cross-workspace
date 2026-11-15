@@ -1207,7 +1207,7 @@ window.__ModuleLoader__.load({
         setCompose(null)
       }, [mySessionId])
 
-      const requestFilter = filter === 'me' ? 'inbox' : 'all'
+      const requestFilter = 'all'
 
       const load = React.useCallback(async function (options) {
         const opts = options || {}
@@ -1327,14 +1327,42 @@ window.__ModuleLoader__.load({
       const allowWake = settings.allowWake !== false
       const maxGroupMembers = typeof settings.maxGroupMembers === 'number' && settings.maxGroupMembers > 0 ? settings.maxGroupMembers : 32
       const sessionDirectory = React.useMemo(function () { return buildSessionDirectory(data) }, [data])
+      const viewerSessionId = mySessionId || (data && data.viewer && typeof data.viewer.sessionId === 'string' ? data.viewer.sessionId : '')
+      const viewerWorkspacePath = data && data.viewer && typeof data.viewer.workspacePath === 'string' ? data.viewer.workspacePath.toLowerCase() : ''
+      const broadcastEnabled = settings.allowWorkspaceBroadcast === true
+      function isForMeMail(mail) {
+        const to = mail && mail.to ? mail.to : {}
+        if (typeof to.sessionId === 'string') return to.sessionId === viewerSessionId
+        if (typeof to.groupId === 'string') {
+          return !!viewerSessionId && Array.isArray(to.memberSessionIds) && to.memberSessionIds.includes(viewerSessionId)
+        }
+        if (typeof to.workspacePath === 'string') {
+          return broadcastEnabled && !!viewerWorkspacePath
+            && to.workspacePath.toLowerCase() === viewerWorkspacePath
+        }
+        return false
+      }
+      const chipCounts = React.useMemo(function () {
+        function isBroadcast(mail) {
+          const to = mail && mail.to ? mail.to : {}
+          return typeof to.workspacePath === 'string' && typeof to.sessionId !== 'string' && typeof to.groupId !== 'string'
+        }
+        return {
+          all: rawMessages.length,
+          unread: rawMessages.filter(function (mail) { return mail && mail.read !== true }).length,
+          me: rawMessages.filter(isForMeMail).length,
+          broadcast: rawMessages.filter(isBroadcast).length,
+          group: rawMessages.filter(function (mail) { return mail && mail.to && typeof mail.to.groupId === 'string' }).length,
+        }
+      }, [rawMessages, viewerSessionId, viewerWorkspacePath, broadcastEnabled])
       const activeGroup = groupIdFilter ? groups.find(function (group) { return group && group.id === groupIdFilter }) || null : null
       const chipGroup = activeGroup || groups[0] || null
       const chipItems = [
-        { id: 'all', label: t('全部', 'All') },
-        { id: 'unread', label: t('未读', 'Unread') },
-        { id: 'me', label: t('发给我', 'To me') },
-        { id: 'broadcast', label: t('广播', 'Broadcast') },
-        { id: 'group', label: chipGroup ? t('群组 · ', 'Group · ') + clipText(chipGroup.name, 12) : t('群组 · 最近', 'Group · recent'), disabled: !chipGroup },
+        { id: 'all', label: t('全部', 'All'), count: chipCounts.all },
+        { id: 'unread', label: t('未读', 'Unread'), count: chipCounts.unread },
+        { id: 'me', label: t('发给我', 'To me'), count: chipCounts.me },
+        { id: 'broadcast', label: t('广播', 'Broadcast'), count: chipCounts.broadcast },
+        { id: 'group', label: chipGroup ? t('群组 · ', 'Group · ') + clipText(chipGroup.name, 12) : t('群组 · 最近', 'Group · recent'), count: chipCounts.group, disabled: !chipGroup },
       ]
 
       const messages = React.useMemo(function () {
@@ -1346,6 +1374,7 @@ window.__ModuleLoader__.load({
           })
         }
         if (filter === 'unread') return rawMessages.filter(function (mail) { return mail && mail.read !== true })
+        if (filter === 'me') return rawMessages.filter(isForMeMail)
         if (filter === 'broadcast') {
           return rawMessages.filter(function (mail) {
             const to = mail && mail.to ? mail.to : {}
@@ -2342,7 +2371,16 @@ window.__ModuleLoader__.load({
               whiteSpace: 'nowrap',
               cursor: item.disabled ? 'default' : 'pointer',
             },
-          }, item.label)
+          }, item.label, typeof item.count === 'number'
+            ? h('span', {
+                style: {
+                  marginLeft: 6,
+                  fontSize: 11,
+                  color: 'var(--dsw-alias-label-tertiary)',
+                  fontWeight: 400,
+                },
+              }, String(item.count))
+            : null)
         })
       )
     }

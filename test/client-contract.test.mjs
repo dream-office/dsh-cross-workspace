@@ -31,6 +31,15 @@ describe('client P0 contracts', () => {
     assert.match(client, /id: 'group'/)
   })
 
+  it('wires all five chip counters, including zero values', () => {
+    assert.match(client, /count: chipCounts\.all/)
+    assert.match(client, /count: chipCounts\.unread/)
+    assert.match(client, /count: chipCounts\.me/)
+    assert.match(client, /count: chipCounts\.broadcast/)
+    assert.match(client, /count: chipCounts\.group/)
+    assert.match(client, /String\(item\.count\)/)
+  })
+
   it('clear-read is described as fully-read-only', () => {
     assert.match(client, /仅删除全员已读/)
     assert.match(client, /Delete fully read/)

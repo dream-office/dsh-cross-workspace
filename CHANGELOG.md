@@ -16,7 +16,8 @@
   自动重试、导出/保留不在本版。
 - **U1**：顶部改为 2 行（收件箱+未读 / [⋯] / [新消息]；chips 全部/未读/发给我/广播/群组·最近），
   消息卡新增「已投递/排队/未投递」状态 chip 与会话内就地重试；无新增请求，颜色仍用宿主 token。
-- 测试：P0/P1/U1 后 **201 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
+  F1 为 5 个 chips 补计数（0 也显示，11px muted，不加背景）。
+- 测试：P0/P1/U1 后 **202 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
 - 未 push、未 Release；UI 阶段完成后统一 bump 0.9.0。
 
 ## 2026-11-08 · 0.8.5（恢复 private + 官方声明）
