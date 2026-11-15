@@ -1,4 +1,4 @@
-// cross-workspace client v1.0 rewrite — single top-level `view`, explicit handlers.
+﻿// cross-workspace client v1.0 rewrite — single top-level `view`, explicit handlers.
 // Browser half only: no bundler, no JSX, no Harness client imports. Host contract
 // (tools, actions, store v2, delivery semantics) is unchanged; this file only
 // renders state and calls the existing management API.
@@ -13,7 +13,7 @@ window.__ModuleLoader__.load({
     const API_HEADERS = { 'content-type': 'application/json', 'x-dsh-cross-workspace': '1' }
     const LIMIT = 300
     const POLL_MS = 4000
-    const BUILD_STAMP = '1.0.0-rewrite 4908180'
+    const BUILD_STAMP = '1.0.0-rewrite 7765262'
 
     async function apiCall(action, payload, signal) {
       if (typeof fetch !== 'function') throw new Error('fetch is unavailable in this shell')

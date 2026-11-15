@@ -1,4 +1,4 @@
-# cross-workspace v1.0 重做架构（rewrite/v1.0）
+﻿# cross-workspace v1.0 重做架构（rewrite/v1.0）
 
 > 目标：**不是再补 0.9.1**，而是从冻结候选 `c811d48` 起，client 从零重写；Host 内部允许
 > 抽模块，但 **store 数据、6 个 mail 工具、管理 API 路径与参数、投递语义保持不变**。
@@ -78,7 +78,7 @@ App
 实现：client 常量 `BUILD_STAMP = '1.0.0-rewrite <sha>'` 手工维护；测试断言
 `^1\.0\.0-rewrite [0-9a-f]{7,40}$`。用户一眼可确认加载的是新版，而不是缓存。
 （没有 `scripts/stamp.mjs` 生成器；v1 骨架不新增构建步骤。）
-当前 stamp `4908180` 是**最后一次 client 代码提交**，不是当前 HEAD；后续 stamp/文档/测试提交不更新 stamp。
+当前 stamp `7765262` 是**最后一次 client 代码提交**，不是当前 HEAD；后续 stamp/文档/测试提交不更新 stamp。
 如果发布前 client 代码还有改动，必须把它改成新的最后一次 client 代码提交 SHA，并在 CHANGELOG 说明。
 
 ---
@@ -141,7 +141,7 @@ App
    - 确认备份 `20261115-rewrite-pre` 与 `20261115-174535` 存在；
    - Plugin Manager **disable → enable** `cross-workspace`（让 Host 重新读取 package exports）；
    - 完全重启 DSH + Ctrl+Shift+R；
-   - 首屏顶部应显示 `1.0.0-rewrite 4908180`；store 不迁移，旧消息/群组/设置仍在。
+   - 首屏顶部应显示 `1.0.0-rewrite 7765262`；store 不迁移，旧消息/群组/设置仍在。
 3. 回滚：Plugin Manager disable → 把 `exports["./client"]` 改回 `./client.js`（或切回 `c811d48`）→ enable → 重启。
    store 未动，无需数据恢复。
 4. 不手动改 profile 的 package/patch；走 `plugin_manager`。
