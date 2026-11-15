@@ -132,14 +132,15 @@ App
 
 ## 7. 干净安装（不破坏当前 store/profile）
 
-1. 新分支先不安装；预览 HTML 直接打开。
-2. 接 Host 后：
-   - 确认 `F:\__备份\4-项目\跨工作区信使\2026\11\20261115-rewrite-pre` 存在；
-   - Plugin Manager 关闭 `cross-workspace`；
-   - 用新分支路径重新 enable（或替换 profile link）；
-   - 重启 DSH + 强刷；
-   - 验证 store 未迁移、旧消息/群组/设置仍在。
-3. 回滚：Plugin Manager 关闭 → 切回 `c811d48` → enable；store 未动，直接恢复。
+1. 预览 HTML 直接打开，不安装。
+2. 当前分支的 `package.json` 已把 `exports["./client"]` 指向 `client.v1.js`；`client.js` 保留为 v0.9 回滚文件。
+   安装预览：
+   - 确认备份 `20261115-rewrite-pre` 与 `20261115-174535` 存在；
+   - Plugin Manager **disable → enable** `cross-workspace`（让 Host 重新读取 package exports）；
+   - 完全重启 DSH + Ctrl+Shift+R；
+   - 首屏顶部应显示 `1.0.0-rewrite 0aa8a72`；store 不迁移，旧消息/群组/设置仍在。
+3. 回滚：Plugin Manager disable → 把 `exports["./client"]` 改回 `./client.js`（或切回 `c811d48`）→ enable → 重启。
+   store 未动，无需数据恢复。
 4. 不手动改 profile 的 package/patch；走 `plugin_manager`。
 
 ---

@@ -7,7 +7,7 @@
 
 - 当前版本：`0.9.0`
 - 文档最后同步：2026-11-15
-- 当前测试：**216 tests / 59 suites，216 pass / 0 fail**
+- 当前测试：**219 tests / 60 suites，219 pass / 0 fail**
 - 插件类型：Cordis bundle（Host 半 + Web Client 半），本地 `link:` 安装
 - 运行范围：本机同一个 DSH Host 进程，不经过网络
 
@@ -40,7 +40,10 @@ lib/store.js             信箱持久化（JSON 原子写、群组、设置、�
 lib/resolve.js           workspace/session 索引、寻址、归档/空白/失效过滤、pickWakeSession
 lib/format.js            工具结果/系统提示/面板文本（中英文）
 lib/delivery.js          单会话/工作区/群组投递；wake 启动确认；WakeLimiter
-client.js                Web Client（单文件、无构建、只 require('react')；含交流图 SVG）
+client.js                Web Client（v0.9 legacy；仅保留给旧契约测试/回滚）
+client.v1.js             v1.0 rewrite Web Client（单 view；package exports./client 指向此文件）
+docs/REWRITE-V1.md       v1.0 重做架构与安装/回滚说明
+preview/v1.1.0.html      v1.1 独立预览（假数据，不接 Host）
 docs/API.md              契约（字段、路由、错误码、工具参数）
 docs/ARCHITECTURE.md     数据流/状态机/生命周期/测试矩阵
 docs/UPGRADING.md        插件/store 版本、迁移、降级、开源发布检查
@@ -197,10 +200,10 @@ requested=wake
 
 ```powershell
 $node = '<DSH运行时>\dependencies\node\bin\node.exe'
-& $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs test\stats.test.mjs
+& $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs test\stats.test.mjs test\v1-client.test.mjs
 ```
 
-当前基线：**216 tests / 59 suites，216 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
+当前基线：**219 tests / 60 suites，219 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
 连跑两次一致才算稳定。
 
 ### 语法与清单

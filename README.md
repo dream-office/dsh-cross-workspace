@@ -10,7 +10,7 @@
 
 - 版本：`0.9.0`（`package.json` / API 契约 / CHANGELOG 同步）
 - 文档最后更新：2026-11-15
-- 测试：**216 tests / 59 suites，全绿**（数字以当前仓库为准，改测试后需同步）
+- 测试：**219 tests / 60 suites，全绿**（数字以当前仓库为准，改测试后需同步）
 - 运行位置：本机同一个 DSH Host 进程内；没有出站网络请求，消息与附件不上传
 
 ---
@@ -367,7 +367,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 
 - 详细版本历史：[`CHANGELOG.md`](CHANGELOG.md)
 - 当前版本：`0.9.0`
-- 自动测试：**216 tests / 59 suites，216 pass / 0 fail**
+- 自动测试：**219 tests / 60 suites，219 pass / 0 fail**
 - 独立复核记录在本机 `reports/`（已 gitignore，不随包发布）；文档会随行为变化同步更新。
 
 > 本 README 面向人和 AI 共同阅读：概念、入口、默认值、错误语义都写全；精确字段以 `docs/API.md` 为准。
