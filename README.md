@@ -314,7 +314,7 @@ HTTP/面板路径返回结构化 `{code,message,candidates?}`；agent 工具路�
 硬链接/根校验也会放宽，见 §9）。
 
 **Q：消息存在哪？怎么清理？**
-$DSH_HOME/cross-workspace/store.json 与 ttachments/；v1 面板无设置页，清理/保留设置走 Harness 设置页的「跨工作区信使」分节，或调 settings/prune API。
+$DSH_HOME/cross-workspace/store.json 与 attachments/；v1 面板无设置页，清理/保留设置走 Harness 设置页的「跨工作区信使」分节，或调 settings/prune API。
 卸载插件不会删除历史消息。
 
 **Q：为什么群组里有人收不到？**
