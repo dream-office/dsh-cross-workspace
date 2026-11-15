@@ -40,11 +40,36 @@ describe('client P0 contracts', () => {
     assert.match(client, /String\(item\.count\)/)
   })
 
+  it('counts one group chip target, not every group on the page', () => {
+    const start = client.indexOf('// CHIP_COUNTS_START')
+    const end = client.indexOf('// CHIP_COUNTS_END')
+    assert.ok(start >= 0 && end > start)
+    const factory = new Function(client.slice(start, end) + '\nreturn { chipCountsFor, isForMeMailFor }')
+    const { chipCountsFor } = factory()
+    const messages = [
+      { to: { groupId: 'g1', memberSessionIds: ['me'] } },
+      { to: { groupId: 'g1', memberSessionIds: ['me'] } },
+      { to: { groupId: 'g2', memberSessionIds: ['me'] } },
+      { to: { sessionId: 'me' } },
+      { to: { workspacePath: 'D:\\ws' } },
+      { to: { groupId: 'legacy' } }, // no snapshot: not "to me"
+    ]
+    const counts = chipCountsFor(messages, {
+      viewerSessionId: 'me',
+      viewerWorkspacePath: 'd:\\ws',
+      broadcastEnabled: true,
+      groupId: 'g1',
+    })
+    assert.deepEqual(counts, { all: 6, unread: 6, me: 5, broadcast: 1, group: 2 })
+    assert.equal(chipCountsFor(messages, { groupId: '' }).group, 0)
+  })
+
   it('splits list and detail at >=1100 and keeps a 340 list column', () => {
     assert.match(client, /function useSplitViewport\(/)
     assert.match(client, /gridTemplateColumns: '340px minmax\(0, 1fr\)'/)
     assert.match(client, /function closeDetail\(/)
     assert.match(client, /data-mail-id/)
+    assert.match(client, /const showSplitDetail =/)
   })
 
   it('compose drawer searches recipients and folds advanced options', () => {

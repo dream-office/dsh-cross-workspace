@@ -1147,6 +1147,47 @@ window.__ModuleLoader__.load({
     // Management page
     // ---------------------------------------------------------------------------
 
+    // CHIP_COUNTS_START
+    // Pure helpers so the chip counts can be tested without a browser. Legacy
+    // group messages without a send-time snapshot are deliberately excluded
+    // from "to me": we do not guess their recipients.
+    function isForMeMailFor(mail, viewerSessionId, viewerWorkspacePath, broadcastEnabled) {
+      const to = mail && mail.to ? mail.to : {}
+      if (typeof to.sessionId === 'string') return to.sessionId === viewerSessionId
+      if (typeof to.groupId === 'string') {
+        return !!viewerSessionId && Array.isArray(to.memberSessionIds) && to.memberSessionIds.includes(viewerSessionId)
+      }
+      if (typeof to.workspacePath === 'string') {
+        return broadcastEnabled && !!viewerWorkspacePath
+          && to.workspacePath.toLowerCase() === viewerWorkspacePath
+      }
+      return false
+    }
+
+    function chipCountsFor(messages, options) {
+      const list = Array.isArray(messages) ? messages : []
+      const opts = options || {}
+      const targetGroupId = typeof opts.groupId === 'string' ? opts.groupId : ''
+      function isBroadcast(mail) {
+        const to = mail && mail.to ? mail.to : {}
+        return typeof to.workspacePath === 'string' && typeof to.sessionId !== 'string' && typeof to.groupId !== 'string'
+      }
+      return {
+        all: list.length,
+        unread: list.filter(function (mail) { return mail && mail.read !== true }).length,
+        me: list.filter(function (mail) {
+          return isForMeMailFor(mail, opts.viewerSessionId, opts.viewerWorkspacePath, opts.broadcastEnabled === true)
+        }).length,
+        broadcast: list.filter(isBroadcast).length,
+        // "群组·最近" must match the click target: one concrete group, not
+        // every group in the current page.
+        group: targetGroupId
+          ? list.filter(function (mail) { return mail && mail.to && mail.to.groupId === targetGroupId }).length
+          : 0,
+      }
+    }
+    // CHIP_COUNTS_END
+
     function ManagementPage(props) {
       const ctx = props.ctx
       const runtime = props.runtime
@@ -1360,33 +1401,19 @@ window.__ModuleLoader__.load({
       const viewerSessionId = mySessionId || (data && data.viewer && typeof data.viewer.sessionId === 'string' ? data.viewer.sessionId : '')
       const viewerWorkspacePath = data && data.viewer && typeof data.viewer.workspacePath === 'string' ? data.viewer.workspacePath.toLowerCase() : ''
       const broadcastEnabled = settings.allowWorkspaceBroadcast === true
-      function isForMeMail(mail) {
-        const to = mail && mail.to ? mail.to : {}
-        if (typeof to.sessionId === 'string') return to.sessionId === viewerSessionId
-        if (typeof to.groupId === 'string') {
-          return !!viewerSessionId && Array.isArray(to.memberSessionIds) && to.memberSessionIds.includes(viewerSessionId)
-        }
-        if (typeof to.workspacePath === 'string') {
-          return broadcastEnabled && !!viewerWorkspacePath
-            && to.workspacePath.toLowerCase() === viewerWorkspacePath
-        }
-        return false
-      }
-      const chipCounts = React.useMemo(function () {
-        function isBroadcast(mail) {
-          const to = mail && mail.to ? mail.to : {}
-          return typeof to.workspacePath === 'string' && typeof to.sessionId !== 'string' && typeof to.groupId !== 'string'
-        }
-        return {
-          all: rawMessages.length,
-          unread: rawMessages.filter(function (mail) { return mail && mail.read !== true }).length,
-          me: rawMessages.filter(isForMeMail).length,
-          broadcast: rawMessages.filter(isBroadcast).length,
-          group: rawMessages.filter(function (mail) { return mail && mail.to && typeof mail.to.groupId === 'string' }).length,
-        }
-      }, [rawMessages, viewerSessionId, viewerWorkspacePath, broadcastEnabled])
       const activeGroup = groupIdFilter ? groups.find(function (group) { return group && group.id === groupIdFilter }) || null : null
       const chipGroup = activeGroup || groups[0] || null
+      function isForMeMail(mail) {
+        return isForMeMailFor(mail, viewerSessionId, viewerWorkspacePath, broadcastEnabled)
+      }
+      const chipCounts = React.useMemo(function () {
+        return chipCountsFor(rawMessages, {
+          viewerSessionId: viewerSessionId,
+          viewerWorkspacePath: viewerWorkspacePath,
+          broadcastEnabled: broadcastEnabled,
+          groupId: chipGroup && typeof chipGroup.id === 'string' ? chipGroup.id : '',
+        })
+      }, [rawMessages, viewerSessionId, viewerWorkspacePath, broadcastEnabled, chipGroup])
       const chipItems = [
         { id: 'all', label: t('全部', 'All'), count: chipCounts.all },
         { id: 'unread', label: t('未读', 'Unread'), count: chipCounts.unread },
@@ -1929,6 +1956,8 @@ window.__ModuleLoader__.load({
             : messageListContent
         )
       }
+
+      const showSplitDetail = !!detail && split && !narrow && !groupEditor && !compose && !editing
 
       return h('div', {
         className: 'dshcw-root',

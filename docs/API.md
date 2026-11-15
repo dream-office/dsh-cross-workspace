@@ -41,7 +41,7 @@
     "maxFileBytes": 5242880, "maxTotalFileBytes": 20971520, "maxFiles": 8,
     "inlineTextBytes": 32768, "maxGroupMembers": 32, "allowExternalAttachments": false
   },
-  "tests": "204 tests / 58 suites"
+  "tests": "205 tests / 58 suites"
 }
 ```
 
