@@ -793,6 +793,7 @@ window.__ModuleLoader__.load({
 .dshcw-dash-kpi-label{font-size:11px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dshcw-dash-kpi-value{font-size:24px;line-height:30px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary)}
 .dshcw-dash-kpi-hint{font-size:10px;line-height:14px;color:var(--dsw-alias-label-tertiary)}
+.dshcw-dash-kpi-click{width:100%;cursor:pointer;text-align:left;font:inherit;color:inherit}
 .dshcw-dash-body{display:flex;flex-direction:column;gap:12px;min-width:0}
 .dshcw-dash-charts{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;min-width:0}
 .dshcw-dash-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-width:0}
@@ -1300,11 +1301,11 @@ window.__ModuleLoader__.load({
       const success = modeTotal > 0 ? Math.round((rangeTotals.delivered / modeTotal) * 100) : null
       const rangeLabel = range === 1 ? t('今日', 'Today') : (range === 30 ? t('近30天', '30 days') : t('近7天', '7 days'))
       const kpis = stats ? [
-        { key: 'unread', label: t('未读', 'Unread'), value: stats.unread, tone: 'accent' },
+        { key: 'unread', label: t('未读', 'Unread'), value: stats.unread, tone: 'accent', onClick: props.onUnread, hint: t('点击查看', 'Open') },
         { key: 'sent', label: t('已发出', 'Sent'), value: rangeTotals.sent, hint: rangeLabel },
         { key: 'failed', label: t('失败待重试', 'Failed / retry'), value: rangeTotals.failed, tone: 'danger', hint: rangeLabel },
-        { key: 'groups', label: t('群组', 'Groups'), value: stats.groups },
-        { key: 'workspaces', label: t('工作区', 'Workspaces'), value: stats.workspaces },
+        { key: 'groups', label: t('群组', 'Groups'), value: stats.groups, onClick: props.onGroups, hint: t('点击查看', 'Open') },
+        { key: 'workspaces', label: t('工作区', 'Workspaces'), value: stats.workspaces, onClick: props.onWorkspaces, hint: t('点击查看', 'Open') },
         { key: 'success', label: t('成功率', 'Success rate'), value: success === null ? '—' : success + '%', hint: rangeLabel },
       ] : []
       const maxDay = chartDays.length > 0
@@ -1331,15 +1332,24 @@ window.__ModuleLoader__.load({
         ? 'conic-gradient(' + donutStops.join(', ') + ')'
         : 'var(--dsw-alias-bg-layer-2)'
 
-      function card(label, value, hint, tone) {
-        return h('div', { key: label, className: 'dshcw-dash-kpi' },
+      function card(label, value, hint, tone, onClick) {
+        const content = [
           h('span', { className: 'dshcw-dash-kpi-label' }, label),
           h('strong', {
             className: 'dshcw-dash-kpi-value',
             style: tone === 'accent' ? { color: 'var(--dshcw-accent-ink)' } : (tone === 'danger' ? { color: 'var(--dshcw-status-failed)' } : undefined),
           }, String(value)),
-          hint ? h('span', { className: 'dshcw-dash-kpi-hint' }, hint) : null
-        )
+          hint ? h('span', { className: 'dshcw-dash-kpi-hint' }, hint) : null,
+        ]
+        if (typeof onClick !== 'function') {
+          return h('div', { key: label, className: 'dshcw-dash-kpi' }, content)
+        }
+        return h('button', {
+          key: label,
+          type: 'button',
+          className: 'dshcw-dash-kpi dshcw-dash-kpi-click',
+          onClick: onClick,
+        }, content)
       }
 
       return h('div', { className: 'dshcw-dash' },
@@ -1384,7 +1394,7 @@ window.__ModuleLoader__.load({
               }, t('发第一条', 'Send first message')))
           : h('div', { className: 'dshcw-dash-body' },
               h('div', { className: 'dshcw-dash-kpis' }, kpis.map(function (item) {
-                return card(item.label, item.value, item.hint || (item.key === 'failed' ? t('点最近消息可重试', 'Retry from recent rows') : ''), item.tone)
+                return card(item.label, item.value, item.hint || '', item.tone, item.onClick)
               })),
               h('div', { className: 'dshcw-dash-charts' },
                 h('section', { className: 'dshcw-dash-card' },
@@ -1460,6 +1470,7 @@ window.__ModuleLoader__.load({
                 h('div', { className: 'dshcw-dash-card-head' },
                   h('h2', null, t('最近消息', 'Recent messages')),
                   h('div', { className: 'dshcw-dash-table-actions' },
+                    query ? h('span', { className: 'dshcw-dash-muted' }, tableMessages.length + t(' 条结果', ' results')) : null,
                     h('button', { type: 'button', className: 'dshcw-dash-link', onClick: props.onViewAll }, t('全部消息 →', 'All messages →')),
                     rows < 20 && tableMessages.length > rows
                       ? h('button', { type: 'button', className: 'dshcw-dash-link', onClick: function () { setRows(rows >= 12 ? 20 : 12) } }, t('查看更多', 'Show more'))
@@ -1482,6 +1493,47 @@ window.__ModuleLoader__.load({
                             : null))
                       })))
           )
+    }
+
+    function GroupDirectory(props) {
+      const t = props.t
+      const groups = Array.isArray(props.groups) ? props.groups : []
+      return h('div', { className: 'dshcw-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto', padding: 12, display: 'grid', gap: 8, alignContent: 'start' } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+          h('span', { style: { flex: 1, fontSize: 12, color: 'var(--dsw-alias-label-tertiary)' } },
+            t('群组消息只发给发送时的成员；后加入的成员看不到旧消息。', 'Group mail goes only to members at send time; later members cannot see older messages.')),
+          h(Button, { variant: 'primary', onClick: props.onCreate }, t('新建群组', 'New group'))
+        ),
+        groups.length === 0
+          ? h(EmptyState, { title: t('还没有群组', 'No groups yet'), description: t('新建一个群组，把不同工作区的会话拉到一起。', 'Create a group to bring sessions from different workspaces together.') })
+          : groups.map(function (group) {
+              const memberCount = typeof group.memberCount === 'number'
+                ? group.memberCount
+                : (Array.isArray(group.members) ? group.members.length : 0)
+              return h('div', {
+                key: group.id,
+                style: {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 10px',
+                  border: '.5px solid var(--dsw-alias-border-l1)',
+                  borderRadius: 8,
+                  background: 'var(--dsw-alias-bg-layer-2)',
+                },
+              },
+                h('button', {
+                  type: 'button',
+                  className: 'dshcw-btn',
+                  onClick: function () { props.onSelect(group) },
+                  style: { flex: 1, minWidth: 0, border: 0, background: 'transparent', color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer' },
+                },
+                  h('span', { className: 'dshcw-truncate', style: { display: 'block', fontSize: 13, fontWeight: 500 } }, group.name || group.id),
+                  h('span', { style: { display: 'block', fontSize: 10, color: 'var(--dsw-alias-label-tertiary)' } }, memberCount + t(' 位成员', ' members'))),
+                h(Button, { variant: 'ghost', onClick: function () { props.onEdit(group) } }, t('编辑', 'Edit'))
+              )
+            })
+      )
     }
 
     function ManagementPage(props) {
@@ -1775,6 +1827,11 @@ window.__ModuleLoader__.load({
 
       function refreshNow() {
         void load({ force: true })
+      }
+
+      function refreshWithNotice() {
+        setNotice(t('已刷新。', 'Refreshed.'))
+        refreshNow()
       }
 
       function markAllRead() {
@@ -2250,7 +2307,7 @@ window.__ModuleLoader__.load({
           secondaryBody = h(WorkspaceColumn, {
             t: t,
             workspaces: workspaces,
-            groups: [],
+            groups: groups,
             unreadTotal: displayUnread,
             expanded: expanded,
             workspacePathFilter: workspacePathFilter,
@@ -2261,54 +2318,26 @@ window.__ModuleLoader__.load({
             loading: loading,
             error: error,
             onToggle: toggleWorkspace,
-            onSelectAll: selectAllWorkspaces,
-            onSelectWorkspace: selectWorkspace,
+            onSelectAll: function () { selectAllWorkspaces(); setSecondary(null); setSurface('messages') },
+            onSelectWorkspace: function (workspace) { selectWorkspace(workspace); setSecondary(null); setSurface('messages') },
             onSelectSession: function (workspace, session) {
               selectSession(workspace, session)
               setSecondary(null)
+              setSurface('messages')
             },
-            onSelectGroup: function () {},
-            onEditGroup: function () {},
-            onCreateGroup: function () {},
+            onSelectGroup: function (group) { selectGroup(group); setSecondary(null); setSurface('messages') },
+            onEditGroup: function (group) { setSecondary(null); startEditGroup(group) },
+            onCreateGroup: function () { setSecondary(null); startCreateGroup() },
             onRetry: refreshNow,
           })
         } else if (secondary === 'groups') {
-          secondaryBody = h('div', { className: 'dshcw-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto', padding: 12, display: 'grid', gap: 8, alignContent: 'start' } },
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-              h('span', { style: { flex: 1, fontSize: 12, color: 'var(--dsw-alias-label-tertiary)' } },
-                t('群组消息只发给发送时的成员；后加入的成员看不到旧消息。', 'Group mail goes only to members at send time; later members cannot see older messages.')),
-              h(Button, { variant: 'primary', onClick: function () { setSecondary(null); startCreateGroup() } }, t('新建群组', 'New group'))
-            ),
-            groups.length === 0
-              ? h(EmptyState, { title: t('还没有群组', 'No groups yet'), description: t('新建一个群组，把不同工作区的会话拉到一起。', 'Create a group to bring sessions from different workspaces together.') })
-              : groups.map(function (group) {
-                  const memberCount = typeof group.memberCount === 'number'
-                    ? group.memberCount
-                    : (Array.isArray(group.members) ? group.members.length : 0)
-                  return h('div', {
-                    key: group.id,
-                    style: {
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 10px',
-                      border: '.5px solid var(--dsw-alias-border-l1)',
-                      borderRadius: 8,
-                      background: 'var(--dsw-alias-bg-layer-2)',
-                    },
-                  },
-                    h('button', {
-                      type: 'button',
-                      className: 'dshcw-btn',
-                      onClick: function () { selectGroup(group); setSecondary(null) },
-                      style: { flex: 1, minWidth: 0, border: 0, background: 'transparent', color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer' },
-                    },
-                      h('span', { className: 'dshcw-truncate', style: { display: 'block', fontSize: 13, fontWeight: 500 } }, group.name || group.id),
-                      h('span', { style: { display: 'block', fontSize: 10, color: 'var(--dsw-alias-label-tertiary)' } }, memberCount + t(' 位成员', ' members'))),
-                    h(Button, { variant: 'ghost', onClick: function () { setSecondary(null); startEditGroup(group) } }, t('编辑', 'Edit'))
-                  )
-                })
-          )
+          secondaryBody = h(GroupDirectory, {
+            t: t,
+            groups: groups,
+            onCreate: function () { setSecondary(null); setSurface('messages'); startCreateGroup() },
+            onSelect: function (group) { selectGroup(group); setSecondary(null); setSurface('messages') },
+            onEdit: function (group) { setSecondary(null); setSurface('messages'); startEditGroup(group) },
+          })
         } else {
           secondaryBody = h(InteractionGraph, {
             t: t,
@@ -2412,9 +2441,10 @@ window.__ModuleLoader__.load({
             workspaces: workspaces,
             now: now,
             retryingId: retryingId,
-            onRefresh: refreshNow,
+            onRefresh: refreshWithNotice,
             onNew: startCompose,
             onViewAll: function () { setSurface('messages'); setFilter('all') },
+            onUnread: function () { setFilter('me'); setDetail(null); setSurface('messages') },
             onGroups: function () { openSecondary('groups') },
             onWorkspaces: function () { openSecondary('workspaces') },
             onGroup: function (group) { selectGroup(group); setSurface('messages') },
@@ -2514,7 +2544,7 @@ window.__ModuleLoader__.load({
                       { key: 'graph', label: t('交流图', 'Graph'), run: function () { openSecondary('graph') } },
                       { key: 'sep1', separator: true },
                       { key: 'read', label: t('全部已读', 'Mark all read'), run: markAllRead },
-                      { key: 'refresh', label: t('刷新', 'Refresh'), run: refreshNow },
+                      { key: 'refresh', label: t('刷新', 'Refresh'), run: refreshWithNotice },
                       { key: 'sep2', separator: true },
                       { key: 'settings', label: t('设置', 'Settings'), run: openSettings },
                     ].map(function (item) {
@@ -5572,7 +5602,7 @@ window.__ModuleLoader__.load({
       apply: apply,
       // Exposed for the no-browser render smoke test; the plugin loader ignores
       // unknown properties and this does not add a slot or a network call.
-      __test: { ManagementPage: ManagementPage, DashboardView: DashboardView },
+      __test: { ManagementPage: ManagementPage, DashboardView: DashboardView, WorkspaceColumn: WorkspaceColumn, GroupDirectory: GroupDirectory },
     }
   },
 })

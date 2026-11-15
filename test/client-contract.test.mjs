@@ -177,6 +177,7 @@ describe('client P0 contracts', () => {
         none: 0,
       })),
     }
+    const kpiClicks = []
     const tree = plugin.__test.DashboardView({
       t: (zh, en) => en,
       data: { viewer: { workspaceTitle: 'Test workspace' } },
@@ -186,16 +187,29 @@ describe('client P0 contracts', () => {
       workspaces: [],
       now: Date.now(),
       retryingId: '',
-      onRefresh() {},
+      onRefresh() { kpiClicks.push('refresh') },
       onNew() {},
       onViewAll() {},
-      onGroups() {},
-      onWorkspaces() {},
+      onUnread() { kpiClicks.push('unread') },
+      onGroups() { kpiClicks.push('groups') },
+      onWorkspaces() { kpiClicks.push('workspaces') },
       onGroup() {},
       onOpen() {},
       onRetry() {},
     })
     assert.ok(tree && typeof tree === 'object')
+    const clickable = []
+    const collect = node => {
+      if (!node) return
+      if (Array.isArray(node)) { node.forEach(collect); return }
+      if (typeof node !== 'object' || !node.props) return
+      if (typeof node.props.onClick === 'function' && String(node.props.className || '').includes('dshcw-dash-kpi-click')) clickable.push(node)
+      collect(node.props.children)
+    }
+    collect(tree)
+    assert.equal(clickable.length, 3)
+    clickable.forEach(node => node.props.onClick())
+    assert.deepEqual(kpiClicks.sort(), ['groups', 'unread', 'workspaces'])
     const values = []
     const walk = node => {
       if (node === null || node === undefined) return
@@ -207,6 +221,107 @@ describe('client P0 contracts', () => {
     for (const expected of ['7', '11', '13', '17', '19', '57%']) {
       assert.ok(values.includes(expected), 'missing KPI value ' + expected + ' in ' + JSON.stringify(values.slice(0, 40)))
     }
+  })
+
+  it('wires workspace page group rows and buttons to real callbacks', () => {
+    const fakeReact = {
+      createElement(type, props, ...children) { return { type, props: Object.assign({}, props || {}, { children }) } },
+      useState(init) { return [typeof init === 'function' ? init() : init, function () {}] },
+      useRef(init) { return { current: init } },
+      useMemo(fn) { return fn() },
+      useCallback(fn) { return fn },
+      useEffect() {},
+      useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot() },
+    }
+    let plugin
+    const windowObject = {
+      innerWidth: 1280,
+      addEventListener() {},
+      removeEventListener() {},
+      __ModuleLoader__: { load: entry => { plugin = entry.factory(() => fakeReact) } },
+    }
+    const evaluate = new Function('window', 'document', 'console', 'setTimeout', 'clearTimeout', client + '\n//# sourceURL=client.js')
+    evaluate(windowObject, undefined, console, setTimeout, clearTimeout)
+    const calls = []
+    const group = { id: 'g1', name: 'Group one', memberCount: 2, unread: 1 }
+    const workspace = { path: 'D:\\ws', title: 'Workspace', unread: 1, sessions: [{ sessionId: 's1', title: 'Session one', running: false, updatedAt: 0 }] }
+    const tree = plugin.__test.WorkspaceColumn({
+      t: (zh, en) => en,
+      workspaces: [workspace],
+      groups: [group],
+      unreadTotal: 2,
+      expanded: { 'D:\\ws': true },
+      workspacePathFilter: null,
+      groupIdFilter: null,
+      selectedSessionId: null,
+      now: Date.now(),
+      hasData: true,
+      loading: false,
+      error: '',
+      onToggle() {},
+      onSelectAll() { calls.push('all') },
+      onSelectWorkspace(value) { calls.push('ws:' + value.path) },
+      onSelectSession(value, session) { calls.push('session:' + session.sessionId) },
+      onSelectGroup(value) { calls.push('select:' + value.id) },
+      onEditGroup(value) { calls.push('edit:' + value.id) },
+      onCreateGroup() { calls.push('create') },
+      onRetry() {},
+    })
+    const nodes = []
+    const walk = node => {
+      if (!node) return
+      if (Array.isArray(node)) { node.forEach(walk); return }
+      if (typeof node !== 'object' || !node.props) return
+      nodes.push(node)
+      walk(node.props.children)
+    }
+    walk(tree)
+    const byText = text => nodes.find(node => node.props && typeof node.props.onClick === 'function' && JSON.stringify(node.props.children || '').includes(text))
+    byText('All workspaces').props.onClick()
+    byText('Workspace').props.onClick()
+    byText('Session one').props.onClick()
+    const newButton = byText('New')
+    assert.ok(newButton)
+    newButton.props.onClick()
+    const groupButton = byText('Group one')
+    assert.ok(groupButton)
+    groupButton.props.onClick()
+    const editButton = nodes.find(node => node.props && typeof node.props.onClick === 'function' && String(node.props.label || '').includes('Edit group'))
+    assert.ok(editButton)
+    editButton.props.onClick()
+    assert.deepEqual(calls, ['all', 'ws:D:\\ws', 'session:s1', 'create', 'select:g1', 'edit:g1'])
+
+    const groupCalls = []
+    const groupTree = plugin.__test.GroupDirectory({
+      t: (zh, en) => en,
+      groups: [group],
+      onCreate() { groupCalls.push('create') },
+      onSelect(value) { groupCalls.push('select:' + value.id) },
+      onEdit(value) { groupCalls.push('edit:' + value.id) },
+    })
+    const groupNodes = []
+    const walkGroup = node => {
+      if (!node) return
+      if (Array.isArray(node)) { node.forEach(walkGroup); return }
+      if (typeof node !== 'object' || !node.props) return
+      groupNodes.push(node)
+      walkGroup(node.props.children)
+    }
+    walkGroup(groupTree)
+    const groupByText = text => groupNodes.find(node => node.props && typeof node.props.onClick === 'function' && JSON.stringify(node.props.children || '').includes(text))
+    groupByText('New group').props.onClick()
+    groupByText('Group one').props.onClick()
+    groupByText('Edit').props.onClick()
+    assert.deepEqual(groupCalls, ['create', 'select:g1', 'edit:g1'])
+
+    assert.doesNotMatch(client, /on[A-Z][A-Za-z]+: function \(\) \{\s*\}/)
+    assert.match(client, /onSelectGroup: function \(group\)/)
+    assert.match(client, /onEditGroup: function \(group\)/)
+    assert.match(client, /onCreateGroup: function \(\)/)
+    assert.match(client, /设置入口在 Harness 设置页/)
+    assert.match(client, /onOpen: function \(mail\)/)
+    assert.match(client, /refreshWithNotice/)
+    assert.match(client, /条结果/)
   })
 
   it('keeps the U4 menu order and secondary pages', () => {
