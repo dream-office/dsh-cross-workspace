@@ -14,7 +14,8 @@
 - 测试：新增 `test/v1-client.test.mjs`（App 渲染、8 个 view、Dashboard KPI/表格、消息/详情、群组/工作区、交流图/设置、顶栏按钮、compose/群组编辑 payload、build stamp、无空 handler）；
   **227 tests / 60 suites 全绿**。旧 client 契约测试仍保留。
 - 实机证据：1440 深色/浅色、390/320 深色、发送抽屉、工作区通过；390/320 `.dshcw-v1` scrollWidth=clientWidth，无横向溢出；
-  `settings/detail` 的 Playwright locator 未命中，由 225 条自动测试覆盖。旧 390/320 深色截图（DSH 首页）作废。
+  `settings` 已由自动测试覆盖；`detail` 的 Playwright locator 未命中，未算视觉通过。旧 390/320 深色截图（DSH 首页）作废。
+- 发布范围：1.0.0 相对 `v0.9.0` 还包含 v4 stats 聚合（`feat/v4-stats`），不是仅 client 重写。
 - 未 push/Release。
 
 ## 2026-11-15 · v4 stats（开发中，未定版本）

@@ -116,8 +116,8 @@ App
 - 进入动画：视图 150ms、KPI stagger 18ms×6、柱 240ms、行 100ms（前 8 行）、抽屉 180/140ms；
   只动 opacity/transform；`prefers-reduced-motion: reduce` 全部关闭；不依赖 `@starting-style`/View Transitions。
 - 预览只验证视觉/交互；**不接 Host、不读写 store**。
-- 截图：当前环境无浏览器自动化，无法生成真实 1280/390/320 截图；预览 HTML 可直接打开查看。
-  设计参考图在 `设计系统\cross-workspace-UI\证据\`（v4 设计，不是本预览截图）。
+- 截图：client owner 环境无浏览器自动化，无法自行生成真实 1280/390/320 截图；本轮实机截图由组长侧
+  Playwright 生成并在评审中核对（1440 深/浅、390/320 深、发送抽屉），不是本仓库产物。
 
 ---
 
@@ -141,7 +141,7 @@ App
    - 确认备份 `20261115-rewrite-pre` 与 `20261115-174535` 存在；
    - Plugin Manager **disable → enable** `cross-workspace`（让 Host 重新读取 package exports）；
    - 完全重启 DSH + Ctrl+Shift+R；
-   - 首屏顶部应显示 `1.0.0-rewrite 7d24f28`；store 不迁移，旧消息/群组/设置仍在。
+   - 首屏顶部应显示 `1.0.0-rewrite 4908180`；store 不迁移，旧消息/群组/设置仍在。
 3. 回滚：Plugin Manager disable → 把 `exports["./client"]` 改回 `./client.js`（或切回 `c811d48`）→ enable → 重启。
    store 未动，无需数据恢复。
 4. 不手动改 profile 的 package/patch；走 `plugin_manager`。

@@ -212,6 +212,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 
 ```powershell
 & $node --check index.js
+& $node --check client.v1.js
 & $node --check client.js
 & $node --check lib\store.js
 & $node --check lib\resolve.js
