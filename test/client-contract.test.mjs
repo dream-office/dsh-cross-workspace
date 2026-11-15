@@ -117,7 +117,7 @@ describe('client P0 contracts', () => {
     assert.match(client, /position: 'fixed'/)
   })
 
-  it('renders DashboardView once with fake React', () => {
+  it('renders DashboardView and keeps KPI values consistent with stats', () => {
     const hooks = []
     let cursor = 0
     const fakeReact = {
@@ -144,24 +144,24 @@ describe('client P0 contracts', () => {
     evaluate(windowObject, undefined, console, setTimeout, clearTimeout)
     const stats = {
       scope: 'viewer',
-      total: 5,
-      unread: 2,
-      sent: 1,
-      groups: 1,
-      workspaces: 1,
-      delivered: 2,
+      total: 35,
+      unread: 7,
+      sent: 11,
+      groups: 17,
+      workspaces: 19,
+      delivered: 20,
       queued: 1,
-      failed: 1,
+      failed: 13,
       mailbox: 1,
       none: 0,
-      days: Array.from({ length: 7 }, (_, index) => ({
-        date: '2026-11-' + String(9 + index).padStart(2, '0'),
-        sent: index === 6 ? 1 : 0,
-        received: index === 6 ? 2 : 0,
-        delivered: index === 6 ? 2 : 0,
-        queued: index === 6 ? 1 : 0,
-        failed: index === 6 ? 1 : 0,
-        mailbox: index === 6 ? 1 : 0,
+      days: Array.from({ length: 30 }, (_, index) => ({
+        date: index === 29 ? '2026-11-15' : '2026-11-' + String(1 + index).padStart(2, '0'),
+        sent: index === 29 ? 11 : 0,
+        received: index === 29 ? 24 : 0,
+        delivered: index === 29 ? 20 : 0,
+        queued: index === 29 ? 1 : 0,
+        failed: index === 29 ? 13 : 0,
+        mailbox: index === 29 ? 1 : 0,
         none: 0,
       })),
     }
@@ -184,6 +184,17 @@ describe('client P0 contracts', () => {
       onRetry() {},
     })
     assert.ok(tree && typeof tree === 'object')
+    const values = []
+    const walk = node => {
+      if (node === null || node === undefined) return
+      if (typeof node === 'string' || typeof node === 'number') { values.push(String(node)); return }
+      if (Array.isArray(node)) { node.forEach(walk); return }
+      if (node.props) walk(node.props.children)
+    }
+    walk(tree)
+    for (const expected of ['7', '11', '13', '17', '19', '57%']) {
+      assert.ok(values.includes(expected), 'missing KPI value ' + expected + ' in ' + JSON.stringify(values.slice(0, 40)))
+    }
   })
 
   it('keeps the U4 menu order and secondary pages', () => {
