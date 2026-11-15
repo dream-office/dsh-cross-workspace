@@ -828,6 +828,7 @@ window.__ModuleLoader__.load({
       }
       return h('button', {
         type: 'button',
+        ref: props.buttonRef,
         className: 'dshcw-btn dshcw-btn-' + variant,
         disabled: !!props.disabled,
         title: props.title,
@@ -1189,6 +1190,7 @@ window.__ModuleLoader__.load({
       const mountedRef = React.useRef(true)
       const menuButtonRef = React.useRef(null)
       const menuRef = React.useRef(null)
+      const newMessageButtonRef = React.useRef(null)
 
       React.useEffect(function () {
         mountedRef.current = true
@@ -1591,6 +1593,11 @@ window.__ModuleLoader__.load({
         const current = compose
         setCompose(null)
         if (current && current.returnToDetail) setDetail(current.returnToDetail)
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(function () {
+            if (newMessageButtonRef.current) newMessageButtonRef.current.focus()
+          })
+        }
       }
 
       function handleSent(value) {
@@ -1848,6 +1855,7 @@ window.__ModuleLoader__.load({
           initialTargetWorkspace: compose.initialTargetWorkspace || '',
           initialTargetGroupId: compose.initialTargetGroupId || '',
           allowWake: allowWake,
+          narrow: narrow,
           onCancel: cancelCompose,
           onSent: handleSent,
         })
@@ -2039,6 +2047,7 @@ window.__ModuleLoader__.load({
             ),
             h(Button, {
               variant: 'primary',
+              buttonRef: newMessageButtonRef,
               onClick: startCompose,
               disabled: !data || (workspaces.length === 0 && groups.length === 0),
               style: { minHeight: 32, padding: '0 12px' },
@@ -3641,12 +3650,14 @@ window.__ModuleLoader__.load({
       const initialGroup = initialGroupId ? groups.find(function (group) { return group && group.id === initialGroupId }) || null : null
       const initialTargetType = isReply
         ? (isGroupReply ? 'group' : 'session')
-        : (initialGroup ? 'group' : (allowWorkspaceBroadcast ? 'workspace' : 'session'))
+        : (initialGroup ? 'group' : 'session')
 
       const [targetType, setTargetType] = React.useState(initialTargetType)
       const [targetWorkspace, setTargetWorkspace] = React.useState(initialWorkspace)
       const [targetSession, setTargetSession] = React.useState('')
       const [targetGroup, setTargetGroup] = React.useState(initialGroup ? initialGroup.id : '')
+      const [recipientQuery, setRecipientQuery] = React.useState('')
+      const [showAdvanced, setShowAdvanced] = React.useState(false)
       const [groupAudience, setGroupAudience] = React.useState('all')
       const [groupRecipients, setGroupRecipients] = React.useState([])
       const [subject, setSubject] = React.useState(isReply ? replySubjectOf(replyTo && replyTo.subject, t) : '')
@@ -3656,6 +3667,15 @@ window.__ModuleLoader__.load({
       const [wake, setWake] = React.useState(defaultWake && allowWake)
       const [error, setError] = React.useState('')
       const [sending, setSending] = React.useState(false)
+
+      React.useEffect(function () {
+        function onKeyDown(event) {
+          if (event.key !== 'Escape' || sending) return
+          props.onCancel()
+        }
+        document.addEventListener('keydown', onKeyDown)
+        return function () { document.removeEventListener('keydown', onKeyDown) }
+      }, [sending, props.onCancel])
 
       const workspace = workspaces.find(function (item) { return item && item.path === targetWorkspace }) || null
       const sessions = workspace && Array.isArray(workspace.sessions) ? workspace.sessions : []
@@ -3673,6 +3693,56 @@ window.__ModuleLoader__.load({
         && selectedGroupMemberIds.every(function (id) { return id === props.mySessionId }))
       const targetIsGroup = isReply ? isGroupReply : targetType === 'group'
       const subjectLimit = typeof settings.maxSubjectChars === 'number' && settings.maxSubjectChars > 0 ? settings.maxSubjectChars : undefined
+      const recipientCandidates = []
+      groups.forEach(function (group) {
+        const memberCount = typeof group.memberCount === 'number'
+          ? group.memberCount
+          : (Array.isArray(group.members) ? group.members.length : 0)
+        recipientCandidates.push({
+          kind: 'group',
+          id: group.id,
+          label: group.name || group.id,
+          meta: memberCount + t(' 位成员', ' members'),
+          group: group,
+        })
+      })
+      workspaces.forEach(function (workspace) {
+        const path = typeof workspace.path === 'string' ? workspace.path : ''
+        if (allowWorkspaceBroadcast && path) {
+          recipientCandidates.push({
+            kind: 'workspace',
+            id: path,
+            label: workspace.title || basename(path) || path,
+            meta: t('工作区广播', 'Workspace broadcast') + ' · ' + path,
+            workspace: workspace,
+          })
+        }
+        (Array.isArray(workspace.sessions) ? workspace.sessions : []).forEach(function (session) {
+          const id = session && typeof session.sessionId === 'string' ? session.sessionId : ''
+          if (!id) return
+          recipientCandidates.push({
+            kind: 'session',
+            id: id,
+            label: session.title ? String(session.title) : shortId(id),
+            meta: (workspace.title || basename(path) || path) + (session.running ? t(' · 运行中', ' · running') : ''),
+            workspace: workspace,
+            session: session,
+          })
+        })
+      })
+      const recipientQueryText = recipientQuery.trim().toLowerCase()
+      const recipientResults = recipientQueryText
+        ? recipientCandidates.filter(function (candidate) {
+            return (candidate.label + ' ' + candidate.meta + ' ' + candidate.id).toLowerCase().includes(recipientQueryText)
+          }).slice(0, 20)
+        : []
+      const selectedRecipient = targetIsGroup && selectedGroup
+        ? { kind: 'group', label: selectedGroup.name || selectedGroup.id, id: selectedGroup.id }
+        : (targetType === 'session' && targetSession
+            ? { kind: 'session', label: sessionLabelOf(buildSessionDirectory(data), targetSession, t), id: targetSession }
+            : (targetType === 'workspace' && targetWorkspace
+                ? { kind: 'workspace', label: (workspace && (workspace.title || basename(workspace.path))) || targetWorkspace, id: targetWorkspace }
+                : null))
 
       React.useEffect(function () {
         // Group sends are mailbox-only unless the user explicitly turns waking on;
@@ -3682,6 +3752,34 @@ window.__ModuleLoader__.load({
 
       function changeTargetType(next) {
         setTargetType(next)
+        setError('')
+      }
+
+      function chooseRecipient(candidate) {
+        if (!candidate) return
+        if (candidate.kind === 'group') {
+          setTargetType('group')
+          setTargetGroup(candidate.id)
+          setGroupAudience('all')
+          setGroupRecipients([])
+        } else if (candidate.kind === 'session') {
+          setTargetType('session')
+          setTargetWorkspace(candidate.workspace && candidate.workspace.path ? candidate.workspace.path : '')
+          setTargetSession(candidate.id)
+        } else if (candidate.kind === 'workspace') {
+          setTargetType('workspace')
+          setTargetWorkspace(candidate.id)
+          setTargetSession('')
+        }
+        setRecipientQuery('')
+        setError('')
+      }
+
+      function clearRecipient() {
+        setTargetType(allowWorkspaceBroadcast ? 'workspace' : 'session')
+        setTargetSession('')
+        setTargetGroup('')
+        setRecipientQuery('')
         setError('')
       }
 
@@ -3844,7 +3942,34 @@ window.__ModuleLoader__.load({
         )
       }
 
-      return h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 } },
+      return h('div', {
+        style: Object.assign({
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          background: 'var(--dsw-alias-bg-layer-1)',
+        }, props.narrow
+          ? {
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: '78%',
+              zIndex: 40,
+              borderTopLeftRadius: 18,
+              borderTopRightRadius: 18,
+              borderTop: '.5px solid var(--dsw-alias-border-l1)',
+              overflow: 'hidden',
+            }
+          : {
+              width: '100%',
+              maxWidth: 420,
+              marginLeft: 'auto',
+              height: '100%',
+              borderLeft: '.5px solid var(--dsw-alias-border-l1)',
+            }),
+      },
         h('div', {
           style: {
             display: 'flex',
@@ -3894,102 +4019,103 @@ window.__ModuleLoader__.load({
                 isGroupReply ? renderGroupAudience(replyGroupRecord) : null
               )
             : h('div', { style: { display: 'grid', gap: 12 } },
-                h(Field, { label: t('目标类型', 'Target type') },
-                  h(Select, {
-                    value: targetType,
-                    'aria-label': t('目标类型', 'Target type'),
-                    onChange: function (event) { changeTargetType(event.target.value) },
-                  },
-                    h('option', { value: 'session' }, t('指定会话', 'Specific session')),
-                    h('option', { value: 'group' }, t('群组', 'Group')),
-                    allowWorkspaceBroadcast ? h('option', { value: 'workspace' }, t('工作区广播', 'Workspace broadcast')) : null
-                  )
-                ),
-                targetType === 'group'
-                  ? h(Field, {
-                      label: t('目标群组', 'Target group'),
-                      hint: t('群组可跨工作区；只有发送时的成员会收到这封消息。', 'Groups can span workspaces; only the members at send time receive this message.'),
-                    },
-                      groups.length === 0
-                        ? h('div', { style: { fontSize: 12, lineHeight: 1.6, color: 'var(--dsw-alias-label-tertiary)' } },
-                            t('还没有群组，先在左侧「群组」区新建一个。', 'No groups yet; create one in the Groups section on the left.'))
-                        : h('div', { style: { display: 'grid', gap: 6 } },
-                            h(Select, {
-                              value: targetGroup,
-                              'aria-label': t('目标群组', 'Target group'),
-                              onChange: function (event) {
-                                setTargetGroup(event.target.value)
-                                setGroupAudience('all')
-                                setGroupRecipients([])
-                                setError('')
-                              },
-                            },
-                              h('option', { value: '' }, t('请选择群组', 'Choose a group')),
-                              groups.map(function (group) {
-                                const memberCount = typeof group.memberCount === 'number'
-                                  ? group.memberCount
-                                  : (Array.isArray(group.members) ? group.members.length : 0)
-                                return h('option', { key: group.id, value: group.id },
-                                  (group.name || group.id) + t('（', ' (') + memberCount + t(' 位成员）', ' members)'))
-                              })
-                            ),
-                            selectedGroupOnlySelf
-                              ? h('div', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-state-error-primary)' } },
-                                  t('这个群组里除你以外没有成员，请先在群组编辑器里添加其他会话。', 'This group has no members besides you; add another session in the group editor first.'))
-                              : null,
-                            renderGroupAudience(selectedGroup)
-                          )
-                    )
-                  : h('div', { style: { display: 'grid', gap: 12 } },
-                      h(Field, {
-                        label: targetType === 'session' ? t('所在工作区', 'Workspace') : t('目标工作区', 'Target workspace'),
-                        hint: targetType === 'session'
-                          ? undefined
-                          : t('广播给该工作区里当时和以后的所有会话。', 'Broadcast to the sessions present now and later in that workspace.'),
-                      },
-                        h(Select, {
-                          value: targetWorkspace,
-                          'aria-label': t('目标工作区', 'Target workspace'),
-                          onChange: function (event) {
-                            setTargetWorkspace(event.target.value)
-                            setTargetSession('')
-                            setError('')
-                          },
+                h(Field, {
+                  label: t('收件人', 'Recipient'),
+                  hint: t('输入会话名、工作区名或群组名搜索；选中后可删除重选。', 'Search by session, workspace or group name; remove the chip to choose again.'),
+                },
+                  selectedRecipient
+                    ? h('div', {
+                        style: {
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          minHeight: 32,
+                          padding: '0 6px 0 10px',
+                          border: '1px solid var(--dsw-alias-border-l2)',
+                          borderRadius: 8,
+                          background: 'var(--dsw-alias-bg-layer-2)',
                         },
-                          workspaces.length === 0 ? h('option', { value: '' }, t('（没有可用工作区）', '(no workspace available)')) : null,
-                          workspaces.map(function (item) {
-                            const label = (item.title || basename(item.path) || item.path) + ' — ' + item.path
-                            return h('option', { key: item.path, value: item.path }, label)
-                          })
-                        )
-                      ),
-                      targetType === 'session'
-                        ? h(Field, {
-                            label: t('目标会话', 'Target session'),
-                            hint: sessions.length === 0
-                              ? t('该工作区没有会话，请选择其他工作区。', 'This workspace has no sessions; choose another workspace.')
-                              : t('目标正在运行时最多等待设置中的秒数；仍未结束则排队到下一轮。', 'If the target is running, the plugin waits up to the configured seconds, then queues the message for its next turn.'),
+                      },
+                        h('span', { className: 'dshcw-truncate', style: { flex: 1, fontSize: 12, color: 'var(--dsw-alias-label-primary)' } },
+                          selectedRecipient.label),
+                        h('span', { style: { flex: 'none', fontSize: 10, color: 'var(--dsw-alias-label-tertiary)' } },
+                          selectedRecipient.kind === 'group' ? t('群组', 'group') : (selectedRecipient.kind === 'workspace' ? t('广播', 'broadcast') : t('会话', 'session'))),
+                        h('button', {
+                          type: 'button',
+                          className: 'dshcw-btn',
+                          'aria-label': t('清除收件人', 'Clear recipient'),
+                          onClick: clearRecipient,
+                          style: {
+                            width: 26,
+                            height: 26,
+                            border: 0,
+                            borderRadius: 6,
+                            background: 'transparent',
+                            color: 'var(--dsw-alias-label-tertiary)',
+                            font: 'inherit',
+                            fontSize: 16,
+                            cursor: 'pointer',
                           },
-                            sessions.length === 0
-                              ? h('div', { style: { fontSize: 12, color: 'var(--dsw-alias-label-tertiary)' } }, t('（没有会话）', '(no sessions)'))
-                              : h(Select, {
-                                  value: targetSession,
-                                  'aria-label': t('目标会话', 'Target session'),
-                                  onChange: function (event) {
-                                    setTargetSession(event.target.value)
-                                    setError('')
-                                  },
+                        }, '×')
+                      )
+                    : null,
+                  h(Input, {
+                    value: recipientQuery,
+                    placeholder: t('搜索会话或群组…', 'Search sessions or groups…'),
+                    'aria-label': t('收件人搜索', 'Recipient search'),
+                    onChange: function (event) {
+                      setRecipientQuery(event.target.value)
+                      setError('')
+                    },
+                  }),
+                  recipientQuery
+                    ? h('div', {
+                        style: {
+                          display: 'grid',
+                          gap: 2,
+                          maxHeight: 200,
+                          overflow: 'auto',
+                          padding: 4,
+                          border: '.5px solid var(--dsw-alias-border-l1)',
+                          borderRadius: 8,
+                          background: 'var(--dsw-alias-bg-layer-2)',
+                        },
+                      },
+                        recipientResults.length > 0
+                          ? recipientResults.map(function (candidate) {
+                              return h('button', {
+                                key: candidate.kind + ':' + candidate.id,
+                                type: 'button',
+                                className: 'dshcw-btn',
+                                onClick: function () { chooseRecipient(candidate) },
+                                style: {
+                                  display: 'grid',
+                                  gap: 1,
+                                  minHeight: 36,
+                                  padding: '4px 8px',
+                                  border: 0,
+                                  borderRadius: 6,
+                                  background: 'transparent',
+                                  color: 'var(--dsw-alias-label-primary)',
+                                  font: 'inherit',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
                                 },
-                                  h('option', { value: '' }, t('请选择会话', 'Choose a session')),
-                                  sessions.map(function (session) {
-                                    const sessionId = typeof session.sessionId === 'string' ? session.sessionId : ''
-                                    return h('option', { key: sessionId, value: sessionId },
-                                      (session.title ? String(session.title) : shortId(sessionId)) + (session.running ? t('（运行中）', ' (running)') : ''))
-                                  })
-                                )
-                          )
-                        : null
-                    )
+                              },
+                                h('span', { className: 'dshcw-truncate', style: { fontSize: 12 } }, candidate.label),
+                                h('span', { className: 'dshcw-truncate', style: { fontSize: 10, color: 'var(--dsw-alias-label-tertiary)' } }, candidate.meta)
+                              )
+                            })
+                          : h('div', { style: { padding: '10px 8px', fontSize: 11, color: 'var(--dsw-alias-label-tertiary)' } },
+                              t('没有匹配的会话或群组。', 'No matching session or group.'))
+                      )
+                    : null
+                ),
+                targetType === 'group' && selectedGroupOnlySelf
+                  ? h('div', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-state-error-primary)' } },
+                      t('这个群组里除你以外没有成员，请先在群组编辑器里添加其他会话。', 'This group has no members besides you; add another session in the group editor first.'))
+                  : null,
+                targetType === 'group' ? renderGroupAudience(selectedGroup) : null
               ),
           h(Field, { label: t('主题', 'Subject') },
             h(Input, {
@@ -4043,30 +4169,51 @@ window.__ModuleLoader__.load({
               },
             })
           ),
-          h('div', {
+          h('button', {
+            type: 'button',
+            className: 'dshcw-btn',
+            onClick: function () { setShowAdvanced(function (value) { return !value }) },
             style: {
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              gap: '6px 12px',
-              paddingTop: 2,
+              minHeight: 28,
+              padding: '0 8px',
+              border: 0,
+              borderRadius: 7,
+              background: 'transparent',
+              color: 'var(--dsw-alias-label-secondary)',
+              font: 'inherit',
+              fontSize: 12,
+              textAlign: 'left',
+              cursor: 'pointer',
+              justifySelf: 'start',
             },
-          },
-            h(Switch, {
-              label: targetIsGroup ? t('尝试唤醒空闲成员', 'Wake idle members') : t('投递后唤醒目标会话', 'Wake the target session after delivery'),
-              checked: wake && allowWake,
-              disabled: !allowWake,
-              onChange: function (event) { setWake(event.target.checked) },
-            }),
-            !allowWake
-              ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-tertiary)' } }, t('设置中已关闭唤醒，本次只进信箱。', 'Wake is disabled in settings; this message goes to the mailbox only.'))
-              : null
-          ),
-          targetIsGroup
-            ? h('div', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-label-tertiary)' } },
-                wake && allowWake
-                  ? t('会尝试唤醒空闲成员；运行中的成员先等待，超时排队到下一轮。', 'Idle members will be woken; running members are waited for, then queued for their next turn if still busy.')
-                  : t('群组消息默认只进信箱；打开「尝试唤醒空闲成员」后才会唤醒空闲成员。', 'Group messages are mailbox-only by default; turn on “Wake idle members” to actively wake idle members.'))
+          }, showAdvanced ? t('收起高级选项', 'Hide advanced') : t('高级选项', 'Advanced')),
+          showAdvanced
+            ? h('div', { style: { display: 'grid', gap: 8, padding: '8px 10px', border: '.5px solid var(--dsw-alias-border-l1)', borderRadius: 8 } },
+                h('div', {
+                  style: {
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '6px 12px',
+                  },
+                },
+                  h(Switch, {
+                    label: targetIsGroup ? t('尝试唤醒空闲成员', 'Wake idle members') : t('投递后唤醒目标会话', 'Wake the target session after delivery'),
+                    checked: wake && allowWake,
+                    disabled: !allowWake,
+                    onChange: function (event) { setWake(event.target.checked) },
+                  }),
+                  !allowWake
+                    ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-tertiary)' } }, t('设置中已关闭唤醒，本次只进信箱。', 'Wake is disabled in settings; this message goes to the mailbox only.'))
+                    : null
+                ),
+                targetIsGroup
+                  ? h('div', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-label-tertiary)' } },
+                      wake && allowWake
+                        ? t('会尝试唤醒空闲成员；运行中的成员先等待，超时排队到下一轮。', 'Idle members will be woken; running members are waited for, then queued for their next turn if still busy.')
+                        : t('群组消息默认只进信箱；打开「尝试唤醒空闲成员」后才会唤醒空闲成员。', 'Group messages are mailbox-only by default; turn on “Wake idle members” to actively wake idle members.'))
+                  : null
+              )
             : null,
           !props.mySessionId
             ? h('div', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-label-tertiary)' } },

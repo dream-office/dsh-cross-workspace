@@ -47,6 +47,13 @@ describe('client P0 contracts', () => {
     assert.match(client, /data-mail-id/)
   })
 
+  it('compose drawer searches recipients and folds advanced options', () => {
+    assert.match(client, /收件人搜索/)
+    assert.match(client, /function clearRecipient\(/)
+    assert.match(client, /高级选项/)
+    assert.match(client, /position: 'fixed'/)
+  })
+
   it('clear-read is described as fully-read-only', () => {
     assert.match(client, /仅删除全员已读/)
     assert.match(client, /Delete fully read/)
