@@ -1547,12 +1547,12 @@ window.__ModuleLoader__.load({
       const browserSessionId = useUiWorkspaceSessionId(ctx)
       const mySessionId = sessionIdFromSessions(sessionsSnapshot) || browserSessionId
 
-      const [data, setData] = React.useState(null)
-      const [loading, setLoading] = React.useState(true)
+      const [data, setData] = React.useState(props.initialData || null)
+      const [loading, setLoading] = React.useState(!props.initialData)
       const [refreshing, setRefreshing] = React.useState(false)
       const [error, setError] = React.useState('')
       const [notice, setNotice] = React.useState('')
-      const [filter, setFilter] = React.useState('me')
+      const [filter, setFilter] = React.useState(props.initialFilter || 'me')
       const [workspacePathFilter, setWorkspacePathFilter] = React.useState(null)
       const [groupIdFilter, setGroupIdFilter] = React.useState(null)
       const [selectedSessionId, setSelectedSessionId] = React.useState(null)
@@ -1572,7 +1572,7 @@ window.__ModuleLoader__.load({
 
       const busyRef = React.useRef(false)
       const seqRef = React.useRef(0)
-      const loadedRef = React.useRef(false)
+      const loadedRef = React.useRef(!!props.initialData)
       const expandedInitRef = React.useRef(false)
       const loadRef = React.useRef(null)
       const viewerRef = React.useRef(mySessionId)
@@ -2444,7 +2444,7 @@ window.__ModuleLoader__.load({
             onRefresh: refreshWithNotice,
             onNew: startCompose,
             onViewAll: function () { setSurface('messages'); setFilter('all') },
-            onUnread: function () { setFilter('me'); setDetail(null); setSurface('messages') },
+            onUnread: function () { setFilter('unread'); setWorkspacePathFilter(null); setGroupIdFilter(null); setDetail(null); setSurface('messages') },
             onGroups: function () { openSecondary('groups') },
             onWorkspaces: function () { openSecondary('workspaces') },
             onGroup: function (group) { selectGroup(group); setSurface('messages') },

@@ -223,6 +223,124 @@ describe('client P0 contracts', () => {
     }
   })
 
+  it('routes the dashboard unread KPI to the unread filter (ManagementPage integration)', () => {
+    const hooks = []
+    let cursor = 0
+    let tree = null
+    let pageProps = null
+    const render = () => {
+      cursor = 0
+      tree = plugin.__test.ManagementPage(pageProps)
+      return tree
+    }
+    const fakeReact = {
+      createElement(type, props, ...children) { return { type, props: Object.assign({}, props || {}, { children }) } },
+      useState(init) {
+        const index = cursor++
+        if (!(index in hooks)) hooks[index] = typeof init === 'function' ? init() : init
+        return [hooks[index], function (next) {
+          hooks[index] = typeof next === 'function' ? next(hooks[index]) : next
+          render()
+        }]
+      },
+      useRef(init) {
+        const index = cursor++
+        if (!(index in hooks)) hooks[index] = { current: init }
+        return hooks[index]
+      },
+      useMemo(fn) { return fn() },
+      useCallback(fn) { return fn },
+      useEffect() {},
+      useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot() },
+    }
+    let plugin
+    const windowObject = {
+      innerWidth: 1280,
+      addEventListener() {},
+      removeEventListener() {},
+      __ModuleLoader__: { load: entry => { plugin = entry.factory(() => fakeReact) } },
+    }
+    const evaluate = new Function('window', 'document', 'console', 'setTimeout', 'clearTimeout', client + '\n//# sourceURL=client.js')
+    evaluate(windowObject, undefined, console, setTimeout, clearTimeout)
+
+    const now = Date.now()
+    const base = {
+      from: { sessionId: 's-other' },
+      to: { sessionId: 's-me' },
+      subject: 'Subject',
+      body: 'Body',
+      createdAt: now - 1000,
+      files: [],
+      tags: [],
+      threadId: 't1',
+      hop: 0,
+      delivery: { mode: 'mailbox' },
+    }
+    const unread = Object.assign({}, base, { id: 'u1', read: false })
+    const read = Object.assign({}, base, { id: 'r1', read: true, createdAt: now - 2000 })
+    const data = {
+      settings: {},
+      viewer: { key: 's:s-me', sessionId: 's-me' },
+      workspaces: [],
+      groups: [],
+      orphans: [],
+      messages: [unread, read],
+      unreadTotal: 1,
+      returned: 2,
+      total: 2,
+      now,
+      stats: {
+        scope: 'viewer',
+        total: 2,
+        unread: 1,
+        sent: 0,
+        groups: 0,
+        workspaces: 0,
+        delivered: 2,
+        queued: 0,
+        failed: 0,
+        mailbox: 0,
+        none: 0,
+        days: Array.from({ length: 30 }, (_, index) => ({
+          date: '2026-11-' + String(1 + index).padStart(2, '0'),
+          sent: 0,
+          received: index === 29 ? 2 : 0,
+          delivered: index === 29 ? 2 : 0,
+          queued: 0,
+          failed: 0,
+          mailbox: 0,
+          none: 0,
+        })),
+      },
+    }
+    pageProps = {
+      ctx: { locale: null, get: () => undefined },
+      runtime: { controllers: new Set() },
+      initialData: data,
+    }
+    render()
+    const findNodes = node => {
+      const out = []
+      const walk = current => {
+        if (!current) return
+        if (Array.isArray(current)) { current.forEach(walk); return }
+        if (typeof current !== 'object' || !current.props) return
+        out.push(current)
+        walk(current.props.children)
+      }
+      walk(node)
+      return out
+    }
+    const dashboard = findNodes(tree).find(node => node.props && typeof node.props.onUnread === 'function')
+    assert.ok(dashboard, 'dashboard view with onUnread callback missing')
+    dashboard.props.onUnread()
+    const nodes = findNodes(tree)
+    const chips = nodes.find(node => node.props && Array.isArray(node.props.items) && typeof node.props.value === 'string')
+    assert.equal(chips.props.value, 'unread')
+    const rows = nodes.filter(node => node.props && node.props.mail && typeof node.props.mail.id === 'string')
+    assert.deepEqual(rows.map(node => node.props.mail.id), ['u1'])
+  })
+
   it('wires workspace page group rows and buttons to real callbacks', () => {
     const fakeReact = {
       createElement(type, props, ...children) { return { type, props: Object.assign({}, props || {}, { children }) } },

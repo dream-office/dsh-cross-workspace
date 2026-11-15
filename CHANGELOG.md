@@ -10,9 +10,10 @@
   `delivered/queued/failed/mailbox/none` 是 top-level mode（`wake`→delivered），五状态+none=total。
 - 近 30 天按 Asia/Shanghai 日历日分桶（KPI 可切今天/7/30）；只覆盖本地保留范围；无 viewer session 全 0。
 - 列表仍 300 条上限，stats 不受切片影响；无新增请求。
-- 测试：纯函数 + route 350 条消息（列表 300、stats.total=350）；**215 tests / 59 suites 全绿**。
+- 测试：纯函数 + route 350 条消息（列表 300、stats.total=350）；**216 tests / 59 suites 全绿**。
 - 修复二级页空 handler：工作区页群组行/新建/编辑/选择；群组页新建/编辑/选择；KPI 未读/群组/工作区可点跳转；
   刷新给 notice，搜索显示结果数；补空 `onClick` 审计与真实点击回调测试。
+- KPI「未读」跳 `unread` 筛选（不是含已读的「发给我」），补 ManagementPage 级集成测试。
 - **v4 dashboard shell**：默认仪表盘（页面头/KPI 6 张/7 天柱/投递环形/群组/工作区/消息量卡/最近消息表 6→12→20）；
   青碧 tokens（#00A2BD / on #0B1A1F / ink #006B7D；暗色提亮）；无数据空态；390/320 走 CSS 栅格。
   最近消息表可按「全部消息」回列表；KPI/环形/消息量按今天/近7天/近30天从 `stats.days` 求和。
