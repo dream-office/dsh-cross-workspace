@@ -111,7 +111,7 @@ button{cursor:pointer}
 @keyframes dshcw-row-in{from{opacity:0}to{opacity:1}}
 @keyframes dshcw-drawer-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes dshcw-drawer-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(12px)}}
-.view.on{animation:dshcw-view-in 150ms ease-out both}
+.view.on{animation:dshcw-view-in 140ms ease-out both}
 .kpis .kpi{animation:dshcw-kpi-in 170ms ease-out both}
 .kpis .kpi:nth-child(1){animation-delay:0ms}.kpis .kpi:nth-child(2){animation-delay:18ms}.kpis .kpi:nth-child(3){animation-delay:36ms}.kpis .kpi:nth-child(4){animation-delay:54ms}.kpis .kpi:nth-child(5){animation-delay:72ms}.kpis .kpi:nth-child(6){animation-delay:90ms}
 .bar-pair i{transform-origin:bottom;animation:dshcw-bar-grow 240ms ease-out both}
@@ -120,8 +120,7 @@ button{cursor:pointer}
 .table .tr:nth-child(2){animation-delay:0ms}.table .tr:nth-child(3){animation-delay:12ms}.table .tr:nth-child(4){animation-delay:24ms}.table .tr:nth-child(5){animation-delay:36ms}.table .tr:nth-child(6){animation-delay:48ms}.table .tr:nth-child(7){animation-delay:60ms}.table .tr:nth-child(8){animation-delay:72ms}.table .tr:nth-child(9){animation-delay:84ms}
 .overlay.on .sheet{animation:dshcw-drawer-in 180ms ease-out both}
 .overlay.closing .sheet{animation:dshcw-drawer-out 140ms ease-in both}
-body{transition:background-color 160ms ease,color 160ms ease}
-@media(prefers-reduced-motion:reduce){.view.on,.kpis .kpi,.bar-pair i,.donut,.table .tr:not(.th),.overlay.on .sheet,.overlay.closing .sheet{animation:none}body{transition:none}}
+@media(prefers-reduced-motion:reduce){.view.on,.kpis .kpi,.bar-pair i,.donut,.table .tr:not(.th),.overlay.on .sheet,.overlay.closing .sheet{animation:none}}
 @media(max-width:1100px){.scope{display:none}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:860px){.top{flex-wrap:wrap}.actions{width:100%;flex-wrap:wrap}.actions .input{flex:1 1 140px;width:100%}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi:nth-child(n+5){display:none}.tr{grid-template-columns:1fr auto;gap:3px 8px;padding:8px 0}.th{display:none}.tr span:nth-child(1){grid-column:1;font-size:10px}.tr span:nth-child(4){grid-column:2;grid-row:1}.tr span:nth-child(2){grid-column:1}.tr span:nth-child(5){grid-column:2;grid-row:2}.subject{grid-column:1/-1;white-space:normal;overflow-wrap:anywhere}.title h1{font-size:18px}.stamp{font-size:10px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
