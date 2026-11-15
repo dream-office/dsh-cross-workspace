@@ -259,6 +259,34 @@ describe('v1 rewrite client skeleton', () => {
     }
   })
 
+  it('renders circular donut, informative graph, no settings menu, and easter egg', () => {
+    const env = load(data, 'dashboard')
+    const dashboard = env.direct(env.plugin.__test.DashboardView, {
+      t: (zh, en) => en, stats: data.stats, messages: data.messages, groups: data.groups, workspaces: data.workspaces,
+      range: 7, rows: 6, now: data.now, search: '',
+      onUnread() {}, onGroups() {}, onWorkspaces() {}, onGroup() {}, onAllMessages() {}, onMoreRows() {},
+      onOpen() {}, onRetry() {}, onNew() {},
+    })
+    const ring = nodesOf(dashboard).filter(node => node.props && node.props.className === 'cw-ring-seg')
+    assert.ok(ring.length >= 2, 'donut segments missing')
+    const graph = env.direct(env.plugin.__test.GraphView, {
+      t: (zh, en) => en, messages: data.messages, me: 's-me', now: data.now,
+      onBack() {}, onOpen() {},
+    })
+    const graphText = texts(graph)
+    assert.ok(graphText.includes('Recent contacts'))
+    assert.ok(graphText.some(value => value.indexOf('2 msgs') >= 0))
+    const menuButton = nodesOf(env.tree).find(node => node.props && node.props['aria-label'] === 'More')
+    menuButton.props.onClick()
+    const menu = nodesOf(env.tree).find(node => node.props && node.props.role === 'menu')
+    assert.ok(menu)
+    assert.ok(!texts(menu).includes('Settings'))
+    assert.ok(texts(menu).includes('Graph'))
+    const stamp = nodesOf(env.tree).find(node => node.props && node.props.className === 'cw-stamp')
+    for (let i = 0; i < 5; i++) stamp.props.onClick()
+    assert.ok(nodesOf(env.tree).some(node => node.props && node.props.className === 'cw-egg'))
+  })
+
   it('builds compose and group-editor payloads from real button handlers', () => {
     const env = load(data, 'compose')
     const payloads = []

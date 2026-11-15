@@ -853,7 +853,7 @@ window.__ModuleLoader__.load({
       const eggTimer = React.useRef(null)
       const stampTap = React.useRef({ count: 0, at: 0 })
       React.useEffect(function () {
-        return function () { if (eggTimer.current) window.clearTimeout(eggTimer.current) }
+        return function () { if (eggTimer.current) clearTimeout(eggTimer.current) }
       }, [])
       function tapStamp() {
         const at = Date.now()
@@ -863,8 +863,8 @@ window.__ModuleLoader__.load({
         if (state.count < 5) return
         state.count = 0
         setEgg(true)
-        if (eggTimer.current) window.clearTimeout(eggTimer.current)
-        eggTimer.current = window.setTimeout(function () { setEgg(false) }, 3000)
+        if (eggTimer.current) clearTimeout(eggTimer.current)
+        eggTimer.current = setTimeout(function () { setEgg(false) }, 3000)
       }
       const newButtonRef = React.useRef(null)
       const [scopeWorkspacePath, setScopeWorkspacePath] = React.useState(null)

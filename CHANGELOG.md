@@ -12,7 +12,7 @@
 - 深/浅色主题；KPI/7天/环形/三卡/消息表；消息、群组、工作区、交流图、设置、详情、发送抽屉、群组编辑。
 - `package.json` `exports["./client"]` 指向 `client.v1.js`；旧 `client.js` 保留作回滚/旧契约测试。
 - 测试：新增 `test/v1-client.test.mjs`（App 渲染、8 个 view、Dashboard KPI/表格、消息/详情、群组/工作区、交流图/设置、顶栏按钮、compose/群组编辑 payload、build stamp、无空 handler）；
-  **227 tests / 60 suites 全绿**。旧 client 契约测试仍保留。
+  **228 tests / 60 suites 全绿**。旧 client 契约测试仍保留。
 - 面板设置入口移除（设置仍在 Harness 设置页「跨工作区信使」分节）；投递环形改为 SVG 正圆，鼠标悬停扇区高亮；交流图改为对话方节点 + 消息数/未读 + 最近往来列表；连点 build stamp 5 次触发摸鱼彩蛋。
 - 实机证据：1440 深色/浅色、390/320 深色、发送抽屉、工作区通过；390/320 `.dshcw-v1` scrollWidth=clientWidth，无横向溢出；
   `settings` 已由自动测试覆盖；`detail` 的 Playwright locator 未命中，未算视觉通过。旧 390/320 深色截图（DSH 首页）作废。
