@@ -269,13 +269,17 @@ window.__ModuleLoader__.load({
 .dshcw-v1 .cw-recv{background:var(--cw-accent)}.dshcw-v1 .cw-sent{background:var(--cw-2)}
 .dshcw-v1 .cw-bar b{font-size:10px;color:var(--cw-muted);font-weight:400}.dshcw-v1 .cw-bar em{font-size:10px;font-style:normal;font-variant-numeric:tabular-nums}
 .dshcw-v1 .cw-donut-wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.dshcw-v1 .cw-donut{width:150px;height:150px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;position:relative;animation:cwFade 240ms ease-out both}
-.dshcw-v1 .cw-donut:after{content:"";position:absolute;inset:20px;border-radius:50%;background:var(--cw-card)}
-.dshcw-v1 .cw-donut div{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
-.dshcw-v1 .cw-donut strong{font-size:18px;font-variant-numeric:tabular-nums}.dshcw-v1 .cw-donut span{font-size:10px;color:var(--cw-muted)}
-.dshcw-v1 .cw-legend{display:grid;gap:5px;flex:1;min-width:0}
-.dshcw-v1 .cw-legend div{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--cw-muted);min-width:0}
-.dshcw-v1 .cw-legend i{width:8px;height:8px;border-radius:2px;flex:none}.dshcw-v1 .cw-legend b{margin-left:auto;color:var(--cw-text);font-variant-numeric:tabular-nums}
+.dshcw-v1 .cw-donut{width:160px;height:160px;flex:none;position:relative;animation:cwFade 240ms ease-out both}
+.dshcw-v1 .cw-donut svg{width:160px;height:160px;display:block;overflow:visible}
+.dshcw-v1 .cw-ring-bg{fill:none;stroke:var(--cw-soft);stroke-width:26}
+.dshcw-v1 .cw-ring-seg{fill:none;stroke-width:26;transition:stroke-width 120ms ease-out,opacity 120ms ease-out;cursor:pointer}
+.dshcw-v1 .cw-ring-seg.hot{stroke-width:34;filter:drop-shadow(0 0 4px var(--cw-soft-accent))}
+.dshcw-v1 .cw-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.dshcw-v1 .cw-donut-center strong{font-size:20px;font-variant-numeric:tabular-nums}.dshcw-v1 .cw-donut-center span{font-size:10px;color:var(--cw-muted)}
+.dshcw-v1 .cw-legend{display:grid;gap:2px;flex:1;min-width:0}
+.dshcw-v1 .cw-legend button{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--cw-muted);min-width:0;border:0;border-radius:7px;background:transparent;padding:3px 4px;text-align:left;cursor:pointer;transition:background-color 120ms ease-out,color 120ms ease-out}
+.dshcw-v1 .cw-legend button.hot{background:var(--cw-soft);color:var(--cw-text)}
+.dshcw-v1 .cw-legend i{width:8px;height:8px;border-radius:50%;flex:none}.dshcw-v1 .cw-legend b{margin-left:auto;color:var(--cw-text);font-variant-numeric:tabular-nums}
 .dshcw-v1 .cw-row{display:flex;align-items:center;gap:8px;min-height:32px;padding:0 4px;border:0;border-radius:8px;background:transparent;color:var(--cw-muted);text-align:left;font-size:11px;min-width:0}
 .dshcw-v1 .cw-row:hover{background:var(--cw-soft);color:var(--cw-text)}.dshcw-v1 .cw-row .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dshcw-v1 .cw-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -307,10 +311,24 @@ window.__ModuleLoader__.load({
 .dshcw-v1 .cw-menu button{min-height:30px;border:0;border-radius:7px;background:transparent;color:var(--cw-text);text-align:left;padding:0 9px;font-size:12px}
 .dshcw-v1 .cw-menu button:hover{background:var(--cw-soft)}
 .dshcw-v1 .cw-log{font:10px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cw-muted);border-top:1px solid var(--cw-border);padding-top:6px;max-height:70px;overflow:auto;flex:none}
-.dshcw-v1 .cw-graph{position:relative;min-height:260px;border:1px solid var(--cw-border);border-radius:12px;background:var(--cw-card);overflow:hidden}
-.dshcw-v1 .cw-graph svg{position:absolute;inset:0;width:100%;height:100%}
-.dshcw-v1 .cw-node{position:absolute;transform:translate(-50%,-50%);border:1px solid var(--cw-border);border-radius:999px;background:var(--cw-card);padding:6px 10px;font-size:11px;color:var(--cw-text)}
-.dshcw-v1 .cw-node.main{border-color:var(--cw-accent);color:var(--cw-ink)}
+.dshcw-v1 .cw-graph{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;min-width:0}
+.dshcw-v1 .cw-graph-canvas{position:relative;min-height:320px;border:1px solid var(--cw-border);border-radius:14px;background:radial-gradient(circle at 50% 45%,var(--cw-soft-accent),transparent 58%);overflow:hidden}
+.dshcw-v1 .cw-graph-canvas svg{position:absolute;inset:0;width:100%;height:100%}
+.dshcw-v1 .cw-node{position:absolute;transform:translate(-50%,-50%);border:1px solid var(--cw-border);border-radius:12px;background:var(--cw-card);padding:7px 9px;font-size:11px;color:var(--cw-text);display:flex;flex-direction:column;gap:1px;max-width:38%;text-align:left;transition:border-color 120ms ease-out,transform 120ms ease-out}
+.dshcw-v1 .cw-node:hover{border-color:var(--cw-accent);transform:translate(-50%,-50%) scale(1.03)}
+.dshcw-v1 .cw-node strong{font-size:11px;line-height:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dshcw-v1 .cw-node small{font-size:9px;line-height:12px;color:var(--cw-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dshcw-v1 .cw-node.main{border-color:var(--cw-accent);background:var(--cw-soft-accent);color:var(--cw-ink);max-width:none}
+.dshcw-v1 .cw-graph-list{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dshcw-v1 .cw-graph-list .cw-head{padding:0 2px 4px}
+.dshcw-v1 .cw-graph-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;border:1px solid var(--cw-border);border-radius:10px;background:var(--cw-card);padding:8px 9px;text-align:left;color:var(--cw-text);min-width:0}
+.dshcw-v1 .cw-graph-row:hover{border-color:var(--cw-accent);background:var(--cw-soft)}
+.dshcw-v1 .cw-graph-row b{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dshcw-v1 .cw-graph-row span{font-size:9px;color:var(--cw-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dshcw-v1 .cw-graph-row em{font-size:10px;color:var(--cw-ink);font-style:normal;white-space:nowrap}
+.dshcw-v1 .cw-egg{position:fixed;right:20px;bottom:20px;z-index:80;border:1px solid var(--cw-accent);border-radius:14px;background:var(--cw-card);color:var(--cw-text);padding:10px 12px;font-size:12px;box-shadow:0 10px 30px rgba(2,6,23,.35);animation:cwEgg 2.8s ease-out both;pointer-events:none}
+.dshcw-v1 .cw-egg b{color:var(--cw-ink)}
+@keyframes cwEgg{0%{opacity:0;transform:translateY(10px) scale(.96)}10%,80%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-4px) scale(.98)}}
 .dshcw-v1 .cw-view{display:flex;flex-direction:column;gap:12px;min-width:0;animation:cwView 140ms ease-out both}
 .dshcw-v1 .cw-kpis .cw-kpi{animation:cwKpi 170ms ease-out both}
 .dshcw-v1 .cw-kpis .cw-kpi:nth-child(1){animation-delay:0ms}.dshcw-v1 .cw-kpis .cw-kpi:nth-child(2){animation-delay:18ms}.dshcw-v1 .cw-kpis .cw-kpi:nth-child(3){animation-delay:36ms}.dshcw-v1 .cw-kpis .cw-kpi:nth-child(4){animation-delay:54ms}.dshcw-v1 .cw-kpis .cw-kpi:nth-child(5){animation-delay:72ms}.dshcw-v1 .cw-kpis .cw-kpi:nth-child(6){animation-delay:90ms}
@@ -407,6 +425,7 @@ window.__ModuleLoader__.load({
       const messages = props.messages || []
       const groups = props.groups || []
       const workspaces = props.workspaces || []
+      const [hotSlice, setHotSlice] = React.useState(-1)
       const totals = stats ? rangeTotals(stats.days, props.range) : { sent: 0, received: 0, delivered: 0, queued: 0, failed: 0, mailbox: 0, none: 0, total: 0 }
       const success = totals.total > 0 ? Math.round(totals.delivered / totals.total * 100) : null
       const rangeLabel = props.range === 1 ? t('今日', 'Today') : props.range === 30 ? t('近30天', '30 days') : t('近7天', '7 days')
@@ -425,13 +444,14 @@ window.__ModuleLoader__.load({
         ['mailbox', totals.mailbox, 'var(--cw-mail)'],
         ['none', totals.none, 'var(--cw-none)'],
       ]
-      let cursor = 0
-      const stops = donut.map(function (item) {
-        const start = cursor / Math.max(1, totals.total) * 100
-        cursor += item[1]
-        return item[2] + ' ' + start + '% ' + cursor / Math.max(1, totals.total) * 100 + '%'
+      const circumference = 2 * Math.PI * 62
+      let ringOffset = 0
+      const ring = donut.map(function (item, index) {
+        const length = totals.total > 0 ? item[1] / totals.total * circumference : 0
+        const segment = { key: item[0], value: item[1], color: item[2], index: index, length: length, offset: ringOffset }
+        ringOffset += length
+        return segment
       })
-      const donutBg = totals.total > 0 ? 'conic-gradient(' + stops.join(',') + ')' : 'var(--cw-soft)'
       if (!stats) return h('div', { className: 'cw-view' }, h(Empty, null, t('正在加载统计…', 'Loading stats…')))
       if (stats.total === 0) {
         return h('div', { className: 'cw-view' },
@@ -463,11 +483,30 @@ window.__ModuleLoader__.load({
           h('section', { className: 'cw-card' },
             h('div', { className: 'cw-head' }, h('h2', null, t('投递状态分布', 'Delivery status')), h('span', null, t('按消息计', 'per message'))),
             h('div', { className: 'cw-donut-wrap' },
-              h('div', { className: 'cw-donut', style: { background: donutBg } },
-                h('div', null, h('strong', null, success === null ? '—' : success + '%'), h('span', null, t('成功率', 'success')))),
+              h('div', { className: 'cw-donut' },
+                h('svg', { viewBox: '0 0 160 160', role: 'img', 'aria-label': t('投递状态分布', 'Delivery status') },
+                  h('circle', { className: 'cw-ring-bg', cx: 80, cy: 80, r: 62 }),
+                  ring.filter(function (segment) { return segment.length > 0 }).map(function (segment) {
+                    return h('circle', {
+                      key: segment.key, className: 'cw-ring-seg' + (hotSlice === segment.index ? ' hot' : ''),
+                      cx: 80, cy: 80, r: 62, stroke: segment.color,
+                      strokeDasharray: segment.length + ' ' + (circumference - segment.length),
+                      strokeDashoffset: -segment.offset,
+                      transform: 'rotate(-90 80 80)',
+                      style: { opacity: hotSlice >= 0 && hotSlice !== segment.index ? 0.32 : 1 },
+                      onMouseEnter: function () { setHotSlice(segment.index) },
+                      onMouseLeave: function () { setHotSlice(-1) },
+                    }, h('title', null, segment.value + ' · ' + Math.round(segment.length / circumference * 100) + '%'))
+                  })),
+                h('div', { className: 'cw-donut-center' }, h('strong', null, success === null ? '—' : success + '%'), h('span', null, t('成功率', 'success')))),
               h('div', { className: 'cw-legend' },
-                [['已投递', totals.delivered, 'var(--cw-ok)'], ['排队', totals.queued, 'var(--cw-warn)'], ['失败', totals.failed, 'var(--cw-bad)'], ['信箱', totals.mailbox, 'var(--cw-mail)'], ['无目标', totals.none, 'var(--cw-none)']].map(function (row) {
-                  return h('div', { key: row[0] }, h('i', { style: { background: row[2] } }), h('span', { className: 'grow' }, row[0]), h('b', null, String(row[1])))
+                [['已投递', 'Delivered', 0], ['排队', 'Queued', 1], ['失败', 'Failed', 2], ['信箱', 'Mailbox', 3], ['无目标', 'No target', 4]].map(function (row) {
+                  const segment = ring[row[2]]
+                  return h('button', {
+                    type: 'button', key: row[0], className: hotSlice === row[2] ? 'hot' : '',
+                    onMouseEnter: function () { setHotSlice(row[2]) }, onMouseLeave: function () { setHotSlice(-1) },
+                    onFocus: function () { setHotSlice(row[2]) }, onBlur: function () { setHotSlice(-1) },
+                  }, h('i', { style: { background: segment.color } }), h('span', { className: 'grow' }, t(row[0], row[1])), h('b', null, String(segment.value)))
                 }))))),
         h('div', { className: 'cw-grid3' },
           h('section', { className: 'cw-card' },
@@ -583,19 +622,73 @@ window.__ModuleLoader__.load({
     function GraphView(props) {
       const t = props.t
       const messages = props.messages || []
-      const nodes = messages.slice(0, 4)
+      const me = props.me || ''
+      const now = props.now || Date.now()
+      const [hot, setHot] = React.useState(-1)
+      const relations = React.useMemo(function () {
+        const table = new Map()
+        messages.forEach(function (mail) {
+          if (!mail || !mail.from) return
+          const from = mail.from
+          const to = mail.to || {}
+          const incoming = from.sessionId !== me
+          let key = incoming ? (from.sessionId || from.workspacePath || '') : (to.groupId || to.sessionId || to.workspacePath || '')
+          let label = incoming
+            ? (from.sessionTitle || from.sessionId || from.workspacePath || '')
+            : (to.groupName || to.sessionTitle || to.workspacePath || to.sessionId || '')
+          if (!key) key = label || 'unknown'
+          const row = table.get(key) || { key: key, label: label || key, total: 0, sent: 0, received: 0, unread: 0, last: null }
+          row.total += 1
+          if (incoming) row.received += 1; else row.sent += 1
+          if (incoming && mail.read !== true) row.unread += 1
+          if (!row.last || (mail.createdAt || 0) > (row.last.createdAt || 0)) row.last = mail
+          table.set(key, row)
+        })
+        return Array.from(table.values()).sort(function (a, b) { return b.total - a.total || ((b.last && b.last.createdAt) || 0) - ((a.last && a.last.createdAt) || 0) })
+      }, [messages, me])
+      const top = relations.slice(0, 6)
+      const max = Math.max(1, ...top.map(function (row) { return row.total }))
+      const positions = top.map(function (_row, index) {
+        if (top.length === 1) return { left: '50%', top: '18%' }
+        const angle = -Math.PI / 2 + index * (Math.PI * 2 / top.length)
+        return { left: (50 + Math.cos(angle) * 33) + '%', top: (50 + Math.sin(angle) * 31) + '%' }
+      })
+      const ago = function (value) {
+        if (!value) return ''
+        const minutes = Math.max(1, Math.round((now - value) / 60000))
+        if (minutes < 60) return t(minutes + ' 分钟前', minutes + 'm ago')
+        const hours = Math.round(minutes / 60)
+        if (hours < 24) return t(hours + ' 小时前', hours + 'h ago')
+        return t(Math.round(hours / 24) + ' 天前', Math.round(hours / 24) + 'd ago')
+      }
       return h('div', { className: 'cw-view' },
         h('div', { className: 'cw-subhead' }, h(Button, { variant: 'ghost', onClick: props.onBack }, '← ' + t('仪表盘', 'Dashboard')), h('h2', null, t('交流图', 'Graph'))),
+        relations.length === 0 ? h('div', { className: 'cw-empty' }, t('还没有可画出的往来；先发一条消息。', 'No relationships yet; send a message first.')) :
         h('div', { className: 'cw-graph' },
-          h('svg', { viewBox: '0 0 600 260', 'aria-hidden': 'true' },
-            h('line', { x1: 300, y1: 130, x2: 110, y2: 60, stroke: 'var(--cw-border)' }),
-            h('line', { x1: 300, y1: 130, x2: 490, y2: 70, stroke: 'var(--cw-border)' }),
-            h('line', { x1: 300, y1: 130, x2: 470, y2: 205, stroke: 'var(--cw-border)' })),
-          h('button', { type: 'button', className: 'cw-node main', style: { left: '50%', top: '50%' }, onClick: props.onBack }, t('我', 'Me')),
-          nodes.map(function (mail, index) {
-            const positions = [{ left: '18%', top: '24%' }, { left: '82%', top: '27%' }, { left: '78%', top: '76%' }, { left: '22%', top: '78%' }]
-            return h('button', { type: 'button', className: 'cw-node', key: mail.id, style: positions[index], onClick: function () { props.onOpen(mail) } }, clip(partyLabel(mail.from, t), 12))
-          })))
+          h('div', { className: 'cw-graph-canvas' },
+            h('svg', { viewBox: '0 0 600 360', 'aria-hidden': 'true' },
+              top.map(function (row, index) {
+                const x = 300 + Math.cos(-Math.PI / 2 + index * (Math.PI * 2 / Math.max(1, top.length))) * 195
+                const y = 180 + Math.sin(-Math.PI / 2 + index * (Math.PI * 2 / Math.max(1, top.length))) * 110
+                return h('line', { key: row.key, x1: 300, y1: 180, x2: x, y2: y, stroke: hot === index ? 'var(--cw-accent)' : 'var(--cw-border)', strokeWidth: 1 + row.total / max * 3, opacity: hot >= 0 && hot !== index ? 0.25 : 0.9 })
+              })),
+            h('button', { type: 'button', className: 'cw-node main', style: { left: '50%', top: '50%' }, onClick: props.onBack }, h('strong', null, t('我', 'Me')), h('small', null, t('当前会话', 'this session'))),
+            top.map(function (row, index) {
+              return h('button', {
+                type: 'button', className: 'cw-node', key: row.key, style: positions[index],
+                onMouseEnter: function () { setHot(index) }, onMouseLeave: function () { setHot(-1) },
+                onFocus: function () { setHot(index) }, onBlur: function () { setHot(-1) },
+                onClick: function () { if (row.last) props.onOpen(row.last) },
+              }, h('strong', null, clip(row.label, 16)), h('small', null, String(row.total) + t(' 条', ' msgs') + (row.unread ? ' · ' + row.unread + t(' 未读', ' unread') : '')))
+            })),
+          h('div', { className: 'cw-graph-list' },
+            h('div', { className: 'cw-head' }, h('h2', null, t('最近往来', 'Recent contacts')), h('span', null, relations.length + t(' 个对话方', ' contacts'))),
+            relations.slice(0, 5).map(function (row) {
+              return h('button', { type: 'button', className: 'cw-graph-row', key: row.key, onClick: function () { if (row.last) props.onOpen(row.last) } },
+                h('b', null, clip(row.label, 18)),
+                h('em', null, String(row.total) + t(' 条', ' msgs') + (row.unread ? ' · ' + row.unread + t(' 未读', ' unread') : '')),
+                h('span', { style: { gridColumn: '1 / -1' } }, (row.last && (row.last.subject || row.last.body) || '') + ' · ' + ago(row.last && row.last.createdAt)))
+            }))))
     }
 
     function SettingsView(props) {
@@ -756,6 +849,23 @@ window.__ModuleLoader__.load({
         try { return window.localStorage.getItem('dshcw-theme') === 'light' ? 'light' : 'dark' } catch (e) { return 'dark' }
       })
       const [menuOpen, setMenuOpen] = React.useState(false)
+      const [egg, setEgg] = React.useState(false)
+      const eggTimer = React.useRef(null)
+      const stampTap = React.useRef({ count: 0, at: 0 })
+      React.useEffect(function () {
+        return function () { if (eggTimer.current) window.clearTimeout(eggTimer.current) }
+      }, [])
+      function tapStamp() {
+        const at = Date.now()
+        const state = stampTap.current
+        state.count = at - state.at < 900 ? state.count + 1 : 1
+        state.at = at
+        if (state.count < 5) return
+        state.count = 0
+        setEgg(true)
+        if (eggTimer.current) window.clearTimeout(eggTimer.current)
+        eggTimer.current = window.setTimeout(function () { setEgg(false) }, 3000)
+      }
       const newButtonRef = React.useRef(null)
       const [scopeWorkspacePath, setScopeWorkspacePath] = React.useState(null)
       const [scopeGroupId, setScopeGroupId] = React.useState(null)
@@ -933,7 +1043,7 @@ window.__ModuleLoader__.load({
         t: t, workspaces: workspaces, onBack: back,
         onWorkspace: openWorkspace, onSession: openSession,
       })
-      else if (view === 'graph') content = h(GraphView, { t: t, messages: messages, onBack: back, onOpen: openMessage })
+      else if (view === 'graph') content = h(GraphView, { t: t, messages: messages, me: viewerSessionId || mySessionId, now: now, onBack: back, onOpen: openMessage })
       else if (view === 'settings') content = h(SettingsView, { t: t, onBack: back, onOpen: openSettings })
       else if (view === 'compose') content = h(ComposeView, {
         t: t, groups: groups, workspaces: workspaces, replyTo: params.replyTo || null, mySessionId: viewerSessionId || mySessionId,
@@ -949,7 +1059,7 @@ window.__ModuleLoader__.load({
         showTop ? h('header', { className: 'cw-top' },
           h('div', { className: 'cw-title' },
             h('h1', null, t('跨工作区信使', 'Cross-workspace courier')),
-            h('span', { className: 'cw-stamp' }, BUILD_STAMP),
+            h('span', { className: 'cw-stamp', onClick: tapStamp, title: t('这是哪个版本？', 'Which build is this?') }, BUILD_STAMP),
             h('span', { className: 'cw-scope' }, t('按本地保留范围', 'Local retention scope'))),
           h('div', { className: 'cw-actions' },
             h('div', { className: 'cw-seg', role: 'group', 'aria-label': t('时间范围', 'Time range') },
@@ -965,12 +1075,12 @@ window.__ModuleLoader__.load({
               menuOpen ? h('div', { className: 'cw-menu', role: 'menu' },
                 h('button', { type: 'button', onClick: function () { navigate('groups') } }, t('群组', 'Groups')),
                 h('button', { type: 'button', onClick: function () { navigate('workspaces') } }, t('工作区', 'Workspaces')),
-                h('button', { type: 'button', onClick: function () { navigate('graph') } }, t('交流图', 'Graph')),
-                h('button', { type: 'button', onClick: function () { navigate('settings') } }, t('设置', 'Settings'))) : null)))
+                h('button', { type: 'button', onClick: function () { navigate('graph') } }, t('交流图', 'Graph'))) : null)))
         : null,
         h('main', { className: 'cw-body' },
           loading && !data ? h(Empty, null, t('正在加载…', 'Loading…')) : content),
-        h('div', { className: 'cw-log' }, 'view=' + view + ' · ' + BUILD_STAMP)
+        h('div', { className: 'cw-log' }, 'view=' + view + ' · ' + BUILD_STAMP),
+        egg ? h('div', { className: 'cw-egg', role: 'status' }, '🐟 ' + t('摸鱼模式已开启', 'Slack mode on') + ' · ' + t('消息会等你回来', 'Messages will wait')) : null
       )
     }
 
