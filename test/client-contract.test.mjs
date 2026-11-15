@@ -29,4 +29,11 @@ describe('client P0 contracts', () => {
     assert.match(client, /Delete fully read/)
     assert.doesNotMatch(client, /t\('删除已读', 'Delete read'\)/)
   })
+
+  it('renders failed delivery and a bounded retry action', () => {
+    assert.match(client, /mode === 'failed'/)
+    assert.match(client, /canRetryDelivery/)
+    assert.match(client, /重试中/)
+    assert.match(client, /MAX_DELIVERY_ATTEMPTS/)
+  })
 })

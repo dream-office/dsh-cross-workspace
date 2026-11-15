@@ -30,7 +30,7 @@
   "tools": [
     "mail_send", "mail_inbox", "mail_read", "mail_reply", "mail_wait", "workspace_list"
   ],
-  "deliveryModes": ["wake", "queued", "mailbox", "none"],
+  "deliveryModes": ["wake", "queued", "mailbox", "failed", "none"],
   "listableSessionRule": "!blank && !archived && !unknown",
   "wakeConfirmedWithinMs": 1600,
   "settingsDefaults": {
@@ -41,7 +41,7 @@
     "maxFileBytes": 5242880, "maxTotalFileBytes": 20971520, "maxFiles": 8,
     "inlineTextBytes": 32768, "maxGroupMembers": 32, "allowExternalAttachments": false
   },
-  "tests": "193 tests / 58 suites"
+  "tests": "200 tests / 58 suites"
 }
 ```
 
@@ -74,6 +74,8 @@
   **发送时的成员快照** 可见，且读取时还必须是**当前群组成员**；默认全部成员，发送时可传
   `memberSessionIds` 子集**只发给选中成员**；后加入的成员看不到旧消息，被移出群后也读不到旧消息；
   群组已删除时按“删除时仍在群”的成员保留历史访问。群组本身不占工作区。
+  **读义务**只按发送时的 `to.memberSessionIds`（不含发送方）计算；删除时冻结的成员只影响可见性，
+  不会给旧消息增加“后来加入/冻结”的读义务。
 - **查看者（viewer）**：读信的主体。会话查看者用 `s:<sessionId>`；界面在没选中会话时可用
   `w:<规范化工作区路径>`（仅当调用方显式传 `workspacePath` 时）。管理视角（面板未选中会话）没有
   sessionId/workspacePath，`MailView.read` 恒为 false，阅读/标记已读以具体会话为单位。
@@ -84,13 +86,16 @@
   - `queued`：目标正在运行，等待 `waitForIdleSeconds` 仍未空闲；消息已 followup 排到**当前轮结束后的
     下一轮**，尚未确认启动（`delivered:false`）。这是诚实状态，不是“已收到”。
   - `mailbox`：只进信箱，不唤醒；目标下次运行时在系统提示里看到未读摘要。
+  - `failed`：请求了唤醒但没有完成（resolve/followup 抛错，或已入队但 1.6s 内没观察到
+    `user/message` 接纳）。消息仍已保存；`error`/`note` 说明原因，`delivery.attempts` 记录尝试次数；
+    可以在 UI/API 手动重试，最多 5 次。**不要把它当成已投递，也不要在列表里显示成 mailbox。**
   - **目标运行中**：先等 `agent.whenIdle()` 最多 `waitForIdleSeconds`；等到空闲 → 正常 wake/确认；
     超时或设置为 0 → `queued` 并继续等待当前轮结束。不会像旧版一样立刻降级为 mailbox。
   - 归档/被 gate 阻塞的会话会启动 `turn/start` 但立刻 `turn/end blocked`，消息不会变成
-    `user/message`；这种情况降级为 `mailbox`、`delivered:false`，note 写「已入队但未观察到会话启动」。
+    `user/message`；这种情况记 `failed`、`delivered:false`，note 写「已入队但未观察到会话启动」。
   - `mail_send` 返回的 `delivery.mode` 才是实际生效的模式，`delivery.requested` 是调用方请求的模式。
-    **AI 规则：工具成功 ≠ 对方收到；只有 `wake` 是已确认启动，`queued`/`mailbox` 都不是；只有对方回复/
-    回执才能证明收到。**
+    **AI 规则：工具成功 ≠ 对方收到；只有 `wake` 是已确认启动，`queued`/`mailbox`/`failed` 都不是；
+    只有对方回复/回执才能证明收到。**
 
 **wake 的精确步骤**（实现见 `lib/delivery.js`）：
 
@@ -107,7 +112,7 @@ const admitted = agent.session.snapshotEvents().some(
   event => event.type === 'user/message' && event.data.id === id,
 )
 // 目标 running 时先等待（见下文）；admitted === true → mode:'wake'
-// 超时/0 → followup 排队，mode:'queued'；未确认接纳 → mailbox + note
+// 超时/0 → followup 排队，mode:'queued'；未确认接纳 → failed + note
 ```
 
 - `id` 必须是本次新建的 UUID；不要拿跨工作区消息 id 代替。
@@ -123,13 +128,14 @@ const admitted = agent.session.snapshotEvents().some(
 | 单会话 wake 确认成功 | `wake` | `true` | `at`、`targetSessionId` |
 | 单会话运行中，等到空闲并确认 | `wake` | `true` | `at`、`targetSessionId` |
 | 单会话运行中，等待超时/0 | `queued` | `false` | `note`、`targetSessionId` |
-| 单会话 wake 未确认/降级 | `mailbox` | `false` | `note`、`targetSessionId` |
+| 单会话 wake 解析/followup 抛错 | `failed` | `false` | `error`、`note`、`targetSessionId` |
+| 单会话 wake 未确认接纳 | `failed` | `false` | `note`、`targetSessionId` |
 | 工作区无候选（含只有发送方） | `none` | `false` | `note` |
 | 工作区有候选但目标正在运行 | 先等待，超时 → `queued` | `false` | `note`、`targetSessionId` |
 | 群组 mailbox（默认） | `mailbox` | `false` | `note`；**无 `members`** |
 | 群组 wake，至少一人确认 | `wake` | `true` | `at`、`members[]`、`targetSessionId`（首个确认成员） |
-| 群组 wake，无确认启动但有 queued | `queued` | `false` | `note`、`members[]`（wake/queued/mailbox 混合） |
-| 群组 wake，无人确认且无排队 | `mailbox` | `false` | `note`、`members[]`（逐成员说明） |
+| 群组 wake，无确认启动但有 queued | `queued` | `false` | `note`、`members[]`（wake/queued/mailbox/failed 混合） |
+| 群组 wake，无人确认且无排队 | `failed`（若有成员失败）或 `mailbox` | `false` | `note`、`members[]`（逐成员说明） |
 | 群组无其他成员 | `none` | `false` | `members: []` |
 
 ## 2. 存储
@@ -146,7 +152,7 @@ cross-workspace/
 
 ```jsonc
 {
-  "version": 1,
+  "version": 2,
   "seq": 12,
   "settings": { /* Settings，见 §3 */ },
   "groups": [ /* Group，见 §3 */ ],
@@ -157,9 +163,9 @@ cross-workspace/
 写盘必须原子（同目录临时文件 + rename），并串行化。解析失败时把坏文件改名为
 `store.corrupt-<时间戳>.json`，然后用空库继续，不能阻断插件启动。
 
-**迁移策略**：当前只写 `version: 1`，实现只读 v1 的已知字段；没有自动迁移器。读到更高版本时不要
-猜测字段，先备份并升级插件；损坏文件隔离后可从备份恢复。`seq` 是消息/群组自增序号，用于诊断与
-稳定排序，不是消息 id 的一部分。
+**迁移策略**：当前写 `version: 2`；v1→v2 是加法迁移（`editedAt` / `deletedGroupMemberIds` /
+`allowWorkspaceBroadcast` 等）。读到更高版本时不要猜测字段，先备份并升级插件；损坏文件隔离后可从备份恢复。
+`seq` 是消息/群组自增序号，用于诊断与稳定排序，不是消息 id 的一部分。
 
 ## 3. 数据结构
 
@@ -198,15 +204,16 @@ interface Message {
   readBy: string[]           // viewer key 列表
   delivery: {
     requested: 'wake' | 'mailbox'
-    mode: 'wake' | 'mailbox' | 'none'
+    mode: 'wake' | 'queued' | 'mailbox' | 'failed' | 'none'
     delivered: boolean
+    attempts?: number        // 已尝试投递次数；手动重试上限 5
     at?: number
     targetSessionId?: string
     error?: string
-    note?: string            // 降级原因等
+    note?: string            // 降级/失败原因等
     members?: Array<{        // 群组投递的逐成员结果
       sessionId: string
-      mode: 'wake' | 'mailbox' | 'none'
+      mode: 'wake' | 'queued' | 'mailbox' | 'failed' | 'none'
       note?: string
       error?: string
     }>
@@ -254,7 +261,7 @@ interface Group {
 - `hop > maxHops` → 只进信箱，`delivery.note` 说明。
 - **唤醒确认窗口**：followup 后最多轮询 1.6s。确认消息被接纳才报 `wake`；否则（安静/归档/阻塞/冷会话）
   一律报 `mailbox`，宁可保守也不谎报。群组按成员逐个确认，`delivery.members` 里分别可能为
-  `wake` / `mailbox`；`delivery.mode` 为 `wake` 当且仅当至少一个成员确认启动。
+  `wake` / `queued` / `mailbox` / `failed`；`delivery.mode` 为 `wake` 当且仅当至少一个成员确认启动。
 - 每分钟唤醒次数超过 `wakesPerMinute` → 本次降级为信箱。该计数是**本插件进程内的全局滑动窗口**；
   `targetWakeCooldownSeconds` 是**逐目标**冷却。
 - 同一目标会话两次唤醒间隔小于 `targetWakeCooldownSeconds` → 降级为信箱。
@@ -388,15 +395,16 @@ interface MailView {
 
 interface Delivery {
   requested: 'wake' | 'mailbox'
-  mode: 'wake' | 'queued' | 'mailbox' | 'none'
+  mode: 'wake' | 'queued' | 'mailbox' | 'failed' | 'none'
   delivered: boolean
+  attempts?: number
   at?: number
   targetSessionId?: string
   note?: string
   error?: string
   members?: Array<{
     sessionId: string
-    mode: 'wake' | 'queued' | 'mailbox' | 'none'
+    mode: 'wake' | 'queued' | 'mailbox' | 'failed' | 'none'
     note?: string
     error?: string
   }>
@@ -497,6 +505,7 @@ value: { deleted: true }
 ```ts
 request: { id: string }
 value: { message: MailView; delivery: Message['delivery'] }
+// 每次调用 attempts+1；达到 5 次后返回 retry-limit。自动重试不在本版范围。
 ```
 
 ### action: `settings`
@@ -516,7 +525,7 @@ value: { removed: number; kept: number; storeDir: string }
 ### action: `clear`
 
 ```ts
-request: { scope: 'read' | 'all' }   // 'read' = 只删已读（至少一个 viewer 读过）；'all' = 全清
+request: { scope: 'read' | 'all' }   // 'read' = 只删全员已读（快照内所有收件人）；'all' = 全清
 value: { removed: number }
 ```
 
@@ -831,6 +840,7 @@ HTTP 层：`method-not-allowed`（405）、`forbidden`（403）、`unsupported-m
 | 会话 | `no-session` | 发送方会话未知 |
 | 会话 | `self-send` | 不能发给自己 |
 | 消息 | `message-not-found` | 消息 id 不存在 |
+| 消息 | `retry-limit` | 手动重试已达 5 次上限 |
 | 消息 | `reply-target-not-found` | 回复的原消息不存在 |
 | 消息 | `empty-message` | 正文、data、附件全空 |
 | 消息 | `body-too-long` / `subject-too-long` / `data-too-large` | 超过设置上限 |

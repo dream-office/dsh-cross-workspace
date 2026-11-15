@@ -82,6 +82,8 @@ describe('time and label helpers', () => {
   it('deliveryLabel() describes wake, mailbox and stored-only delivery', () => {
     assert.equal(deliveryLabel({ mode: 'wake', delivered: true, targetSessionId: 's-target' }), '已唤醒 s-target')
     assert.equal(deliveryLabel({ mode: 'mailbox', delivered: false }), '信箱（未唤醒）')
+    assert.equal(deliveryLabel({ mode: 'queued', delivered: false }), '排队（目标运行中）')
+    assert.equal(deliveryLabel({ mode: 'failed', delivered: false }), '未投递（失败，可重试）')
     assert.equal(deliveryLabel({ mode: 'none', delivered: false }), '仅存储（无可用会话）')
     assert.equal(deliveryLabel(undefined), '未知')
     assert.equal(deliveryLabel({ mode: 'mailbox' }, 'en'), 'mailbox (not woken)')

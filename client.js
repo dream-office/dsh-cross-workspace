@@ -20,6 +20,7 @@ window.__ModuleLoader__.load({
     const POLL_BACKGROUND_MS = 12000
     const POLL_HIDDEN_MS = 15000
     const LIMIT = 300
+    const MAX_DELIVERY_ATTEMPTS = 5
     const GRAPH_MESSAGE_LIMIT = 120
     const NARROW_WIDTH = 760
 
@@ -374,7 +375,17 @@ window.__ModuleLoader__.load({
     function deliveryBadgeLabel(delivery, t) {
       if (delivery && delivery.mode === 'wake') return t('已唤醒', 'Woke')
       if (delivery && delivery.mode === 'queued') return t('排队', 'Queued')
+      if (delivery && delivery.mode === 'failed') return t('未投递', 'Failed')
       return t('信箱', 'Mailbox')
+    }
+
+    function deliveryAttempts(delivery) {
+      return delivery && Number.isInteger(delivery.attempts) && delivery.attempts >= 0 ? delivery.attempts : 0
+    }
+
+    function canRetryDelivery(delivery) {
+      if (!delivery || delivery.mode === 'wake' || delivery.mode === 'queued') return false
+      return deliveryAttempts(delivery) < MAX_DELIVERY_ATTEMPTS
     }
 
     function deliveryLines(delivery, t, sessionLabel) {
@@ -387,11 +398,13 @@ window.__ModuleLoader__.load({
       const actual = delivery.mode === 'wake' ? t('唤醒', 'wake')
         : delivery.mode === 'mailbox' ? t('信箱', 'mailbox')
           : delivery.mode === 'queued' ? t('排队（目标运行中）', 'queued (target busy)')
-            : delivery.mode === 'none' ? t('无（没有可投递的目标）', 'none (no deliverable target)')
-              : String(delivery.mode || '')
+            : delivery.mode === 'failed' ? t('失败（可重试）', 'failed (retryable)')
+              : delivery.mode === 'none' ? t('无（没有可投递的目标）', 'none (no deliverable target)')
+                : String(delivery.mode || '')
       lines.push({ text: t('请求方式：', 'Requested: ') + (requested || t('未知', 'unknown')), tone: 'plain' })
       lines.push({ text: t('实际方式：', 'Actual: ') + (actual || t('未知', 'unknown')), tone: 'plain' })
       lines.push({ text: t('已投递：', 'Delivered: ') + (delivery.delivered === true ? t('是', 'yes') : t('否', 'no')), tone: 'plain' })
+      if (deliveryAttempts(delivery) > 0) lines.push({ text: t('尝试次数：', 'Attempts: ') + deliveryAttempts(delivery) + '/' + MAX_DELIVERY_ATTEMPTS, tone: 'plain' })
       if (typeof delivery.at === 'number' && delivery.at > 0) lines.push({ text: t('投递时间：', 'At: ') + formatDate(delivery.at), tone: 'plain' })
       if (typeof delivery.targetSessionId === 'string' && delivery.targetSessionId) lines.push({ text: t('目标会话：', 'Target session: ') + delivery.targetSessionId, tone: 'plain' })
       if (typeof delivery.note === 'string' && delivery.note) lines.push({ text: t('说明：', 'Note: ') + delivery.note, tone: 'plain' })
@@ -400,7 +413,7 @@ window.__ModuleLoader__.load({
         delivery.members.forEach(function (member) {
           if (!member || typeof member !== 'object') return
           const label = sessionLabel ? sessionLabel(member.sessionId) : shortId(member.sessionId)
-          const mode = member.mode === 'wake' ? t('已唤醒', 'woke') : member.mode === 'mailbox' ? t('信箱', 'mailbox') : member.mode === 'queued' ? t('排队', 'queued') : member.mode === 'none' ? t('未投递', 'none') : String(member.mode || '')
+          const mode = member.mode === 'wake' ? t('已唤醒', 'woke') : member.mode === 'mailbox' ? t('信箱', 'mailbox') : member.mode === 'queued' ? t('排队', 'queued') : member.mode === 'failed' ? t('失败', 'failed') : member.mode === 'none' ? t('未投递', 'none') : String(member.mode || '')
           const detail = member.error ? t('错误：', 'Error: ') + member.error : (member.note ? t('说明：', 'Note: ') + member.note : '')
           lines.push({
             text: t('成员：', 'Member: ') + label + ' — ' + (mode || t('未知', 'unknown')) + (detail ? '（' + detail + '）' : ''),
@@ -468,6 +481,7 @@ window.__ModuleLoader__.load({
         parts.push(t('投递方式：', 'Delivery: ') + deliveryBadgeLabel(value.delivery, t) + (mode ? ' (' + mode + ')' : ''))
       }
       if (value && value.delivery && value.delivery.mode === 'wake' && value.delivery.delivered !== true) parts.push(t('唤醒未完成，目标可在下次运行时读到', 'Wake incomplete; the target can read it on its next run'))
+      if (value && value.delivery && typeof value.delivery.error === 'string' && value.delivery.error) parts.push(t('原因：', 'Reason: ') + value.delivery.error)
       if (value && Array.isArray(value.warnings) && value.warnings.length) parts.push(t('提示：', 'Warnings: ') + value.warnings.join('；'))
       if (!parts.length) parts.push(t('已发送', 'Sent'))
       return parts.join(t('；', '; '))
@@ -1124,6 +1138,7 @@ window.__ModuleLoader__.load({
       const [compose, setCompose] = React.useState(null)
       const [groupEditor, setGroupEditor] = React.useState(null)
       const [detailBusy, setDetailBusy] = React.useState('')
+      const [retryingId, setRetryingId] = React.useState('')
       const [lastRefreshAt, setLastRefreshAt] = React.useState(0)
       const [markingAll, setMarkingAll] = React.useState(false)
 
@@ -1533,6 +1548,10 @@ window.__ModuleLoader__.load({
 
       function wakeDeliver() {
         if (!detail) return
+        if (!canRetryDelivery(detail.delivery)) {
+          setError(t('这条消息没有可重试的投递，或已达到 5 次上限。', 'This message has no retryable delivery, or has reached the 5-attempt limit.'))
+          return
+        }
         setDetailBusy('deliver')
         call('deliver', { id: detail.id }).then(function (value) {
           if (value && value.message) {
@@ -1543,12 +1562,30 @@ window.__ModuleLoader__.load({
               return Object.assign({}, value.message, { read: current.read === true || value.message.read === true })
             })
           }
-          setNotice(t('补投递完成：', 'Delivery attempted: ') + deliveryBadgeLabel(value && value.delivery ? value.delivery : null, t))
+          const delivery = value && value.delivery ? value.delivery : null
+          setNotice(t('重试结果：', 'Retry result: ') + deliveryBadgeLabel(delivery, t)
+            + (delivery && delivery.error ? ' — ' + delivery.error : ''))
           void load({ quiet: true })
         }).catch(function (reason) {
           if (!isAbortError(reason)) setError(errorMessage(reason, t))
         }).finally(function () {
           setDetailBusy('')
+        })
+      }
+
+      function retryMessage(mail) {
+        if (!mail || !canRetryDelivery(mail.delivery) || retryingId) return
+        setError('')
+        setRetryingId(mail.id)
+        call('deliver', { id: mail.id }).then(function (value) {
+          const delivery = value && value.delivery ? value.delivery : null
+          setNotice(t('重试结果：', 'Retry result: ') + deliveryBadgeLabel(delivery, t)
+            + (delivery && delivery.error ? ' — ' + delivery.error : ''))
+          void load({ quiet: true, force: true })
+        }).catch(function (reason) {
+          if (!isAbortError(reason)) setError(errorMessage(reason, t))
+        }).finally(function () {
+          setRetryingId('')
         })
       }
 
@@ -1750,6 +1787,8 @@ window.__ModuleLoader__.load({
                         now: now,
                         active: false,
                         onOpen: openMessage,
+                        onRetry: retryMessage,
+                        retryingId: retryingId,
                       })
                     })
           )
@@ -2517,7 +2556,8 @@ window.__ModuleLoader__.load({
         const mode = mail.delivery && mail.delivery.mode ? mail.delivery.mode : 'mailbox'
         if (mode === 'wake') return t('已唤醒', 'wake')
         if (mode === 'queued') return t('排队', 'queued')
-        if (mode === 'none') return t('失败', 'none')
+        if (mode === 'failed') return t('未投递', 'failed')
+        if (mode === 'none') return t('无目标', 'none')
         return t('信箱', 'mailbox')
       }
 
@@ -2842,10 +2882,19 @@ window.__ModuleLoader__.load({
       const files = Array.isArray(mail.files) ? mail.files : []
       const hasData = hasJsonData(mail)
       const text = snippet(mail.body)
-      return h('button', {
-        type: 'button',
+      const attempts = deliveryAttempts(delivery)
+      const retryable = canRetryDelivery(delivery)
+      return h('div', {
+        role: 'button',
+        tabIndex: 0,
         className: 'dshcw-row',
         onClick: function () { props.onOpen(mail) },
+        onKeyDown: function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            props.onOpen(mail)
+          }
+        },
         style: {
           display: 'flex',
           alignItems: 'flex-start',
@@ -2908,11 +2957,36 @@ window.__ModuleLoader__.load({
             isGroupMail(mail)
               ? h(Badge, { tone: 'idle', title: groupLabelOf(mail.to, t) }, t('群组', 'Group') + (mail.to && mail.to.groupName ? ' · ' + clipText(mail.to.groupName, 16) : ''))
               : null,
-            h(Badge, { tone: delivery && delivery.mode === 'wake' ? 'success' : 'plain' }, deliveryBadgeLabel(delivery, t)),
+            h(Badge, {
+              tone: delivery && delivery.mode === 'wake' ? 'success' : (delivery && delivery.mode === 'failed' ? 'error' : 'plain'),
+            }, deliveryBadgeLabel(delivery, t)),
             files.length ? h(Badge, null, t('附件 ', 'Files ') + files.length) : null,
             hasData ? h(Badge, null, 'JSON') : null,
             mail.hop > 0 ? h(Badge, { tone: 'idle' }, '#' + mail.hop) : null,
-            delivery && delivery.error ? h(Badge, { tone: 'error' }, t('投递出错', 'Delivery error')) : null
+            delivery && delivery.error ? h(Badge, { tone: 'error' }, t('投递出错', 'Delivery error')) : null,
+            retryable ? h('button', {
+              type: 'button',
+              className: 'dshcw-btn',
+              onClick: function (event) {
+                event.stopPropagation()
+                props.onRetry(mail)
+              },
+              onKeyDown: function (event) { event.stopPropagation() },
+              disabled: props.retryingId === mail.id,
+              style: {
+                minHeight: 22,
+                padding: '0 6px',
+                border: '.5px solid var(--dsw-alias-border-l1)',
+                borderRadius: 6,
+                background: 'transparent',
+                color: 'var(--dsw-alias-brand-primary)',
+                font: 'inherit',
+                fontSize: 11,
+                cursor: 'pointer',
+              },
+            }, props.retryingId === mail.id
+              ? t('重试中…', 'Retrying…')
+              : t('重试', 'Retry') + ' ' + attempts + '/' + MAX_DELIVERY_ATTEMPTS) : null
           )
         )
       )
@@ -2998,6 +3072,9 @@ window.__ModuleLoader__.load({
         && typeof mail.to.sessionId !== 'string' && typeof mail.to.groupId !== 'string')
       const canWake = (!delivery || delivery.delivered !== true || delivery.mode !== 'wake')
         && (props.allowWorkspaceBroadcast !== false || !isWorkspaceBroadcast)
+      const attempts = deliveryAttempts(delivery)
+      const retryLimitReached = attempts >= MAX_DELIVERY_ATTEMPTS
+      const canRetryNow = canWake && canRetryDelivery(delivery)
       const ownMessage = !!(props.mySessionId && mail.from && typeof mail.from.sessionId === 'string' && mail.from.sessionId === props.mySessionId)
       const directory = props.sessionDirectory
       const groups = Array.isArray(props.groups) ? props.groups : []
@@ -3060,9 +3137,18 @@ window.__ModuleLoader__.load({
             mail.read === true
               ? h(Button, { variant: 'outline', onClick: props.onMarkUnread, disabled: !!busy }, busy === 'mark' ? t('处理中…', 'Working…') : t('标记未读', 'Mark unread'))
               : null,
-            canWake
-              ? h(Button, { variant: 'outline', onClick: props.onWake, disabled: !!busy }, busy === 'deliver' ? t('投递中…', 'Delivering…') : t('唤醒投递', 'Wake delivery'))
-              : null,
+            canRetryNow
+              ? h(Button, {
+                  variant: 'outline',
+                  onClick: props.onWake,
+                  disabled: !!busy,
+                  title: retryLimitReached ? t('已达投递上限', 'Delivery attempt limit reached') : undefined,
+                }, busy === 'deliver'
+                  ? t('投递中…', 'Delivering…')
+                  : t('重试投递', 'Retry delivery') + ' (' + attempts + '/' + MAX_DELIVERY_ATTEMPTS + ')')
+              : (retryLimitReached && delivery && delivery.mode !== 'wake'
+                  ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-state-error-primary)' } }, t('重试已达 5 次上限', 'Retry limit reached (5)'))
+                  : null),
             h(Button, {
               variant: 'outline',
               onClick: props.onReply,
@@ -3086,7 +3172,9 @@ window.__ModuleLoader__.load({
           }, subjectText(mail, t)),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center', marginBottom: 10 } },
             isGroup ? h(Badge, { tone: 'idle', title: groupLabelOf(mail.to, t) }, t('群组消息', 'Group message')) : null,
-            h(Badge, { tone: delivery && delivery.mode === 'wake' ? 'success' : 'plain' }, deliveryBadgeLabel(delivery, t)),
+            h(Badge, {
+              tone: delivery && delivery.mode === 'wake' ? 'success' : (delivery && delivery.mode === 'failed' ? 'error' : 'plain'),
+            }, deliveryBadgeLabel(delivery, t)),
             mail.hop > 0 ? h(Badge, { tone: 'idle' }, t('跳数 ', 'Hop ') + mail.hop) : null,
             files.length ? h(Badge, null, t('附件 ', 'Files ') + files.length) : null,
             hasData ? h(Badge, null, 'JSON') : null

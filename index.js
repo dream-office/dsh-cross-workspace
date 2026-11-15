@@ -15,7 +15,7 @@ import { homedir } from 'node:os'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { DEFAULT_SETTINGS, MailStore, StoreError, canonicalPath, looksTextual, mediaTypeFor, normalizeSettings, viewerKeyFor } from './lib/store.js'
 import { TargetError, buildIndex, isListableSession, pickWakeSession, resolveTarget, titleOf, viewerFor, workspaceForCwd } from './lib/resolve.js'
-import { WakeLimiter, deliverMessage } from './lib/delivery.js'
+import { MAX_DELIVERY_ATTEMPTS, WakeLimiter, deliverMessage } from './lib/delivery.js'
 import {
   buildUnreadContext,
   pickText,
@@ -797,6 +797,11 @@ export function apply(ctx, config = {}) {
       if (typeof body.id !== 'string' || body.id.length === 0) throw new StoreError('invalid-id', '缺少消息 id。')
       const message = store.getMessage(body.id)
       if (message === undefined) throw new StoreError('message-not-found', `消息 ${body.id} 不存在。`)
+      const attempts = Number.isInteger(message.delivery?.attempts) ? message.delivery.attempts : 0
+      if (attempts >= MAX_DELIVERY_ATTEMPTS) {
+        throw new StoreError('retry-limit',
+          `这条消息已经尝试投递 ${attempts} 次，达到上限 ${MAX_DELIVERY_ATTEMPTS} 次；请改用信箱查看。`)
+      }
       const settings = store.getSettings()
       if (typeof message.to.groupId !== 'string' && typeof message.to.sessionId !== 'string'
         && typeof message.to.workspacePath === 'string' && settings.allowWorkspaceBroadcast !== true) {

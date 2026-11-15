@@ -10,7 +10,7 @@
 
 - 版本：`0.8.5`（`package.json` / API 契约 / CHANGELOG 同步）
 - 文档最后更新：2026-11-08
-- 测试：**193 tests / 58 suites，全绿**（数字以当前仓库为准，改测试后需同步）
+- 测试：**200 tests / 58 suites，全绿**（数字以当前仓库为准，改测试后需同步）
 - 运行位置：本机同一个 DSH Host 进程内；没有出站网络请求，消息与附件不上传
 
 ---
@@ -193,7 +193,8 @@ HTTP/面板路径返回结构化 `{code,message,candidates?}`；agent 工具路�
 - 群组默认不把发送方自己算进收件人。
 
 **AI 发送规则**：工具成功 ≠ 对方收到。必须读 `delivery.mode`：`wake` 是已确认启动，`queued` 是排队
-（下一轮才处理，尚未启动），`mailbox` 是只进信箱，`none` 是没投出去。只有对方的回复/回执才能证明“收到”。
+（下一轮才处理，尚未启动），`mailbox` 是只进信箱，`failed` 是唤醒失败/未确认接纳（消息仍在，可手动重试），
+`none` 是没投出去。只有对方的回复/回执才能证明“收到”。
 
 ---
 
@@ -282,8 +283,9 @@ HTTP/面板路径返回结构化 `{code,message,candidates?}`；agent 工具路�
 ## 11. 常见问题
 
 **Q：为什么显示“信箱（未唤醒）”？**
-目标正在运行会先等 `waitForIdleSeconds`，超时则排队（`queued`）；已归档、被 gate 阻塞、唤醒冷却/超频，
-或 1.6 秒内没有确认到启动则进信箱。消息都已保存，不要凭工具成功宣称对方收到。
+目标正在运行会先等 `waitForIdleSeconds`，超时则排队（`queued`）；归档、被 gate 阻塞、唤醒解析/启动失败
+或未确认接纳会记 `failed`（消息仍在信箱，可在列表/详情手动重试，最多 5 次）；冷却/超频/`allowWake=false`
+则降级为 `mailbox` 或 `none`。消息都已保存，不要凭工具成功宣称对方收到。
 
 **Q：为什么 `workspace_list` 里没有某个对话？**
 它可能是空白（没开始）、已归档或已失效；空白/归档的显式会话 id 仍可投递，失效 unknown 会
@@ -365,7 +367,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 
 - 详细版本历史：[`CHANGELOG.md`](CHANGELOG.md)
 - 当前版本：`0.8.5`
-- 自动测试：**193 tests / 58 suites，193 pass / 0 fail**
+- 自动测试：**200 tests / 58 suites，200 pass / 0 fail**
 - 独立复核记录在本机 `reports/`（已 gitignore，不随包发布）；文档会随行为变化同步更新。
 
 > 本 README 面向人和 AI 共同阅读：概念、入口、默认值、错误语义都写全；精确字段以 `docs/API.md` 为准。

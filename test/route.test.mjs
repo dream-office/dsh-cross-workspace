@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test'
 
 import { apply } from '../index.js'
 import { MailStore } from '../lib/store.js'
-import { deliverMessage } from '../lib/delivery.js'
+import { MAX_DELIVERY_ATTEMPTS, deliverMessage } from '../lib/delivery.js'
 
 const HOST = '127.0.0.1:51999'
 const ROUTE_PATH = '/plugins/dsh-cross-workspace/api'
@@ -585,6 +585,62 @@ describe('action: send and delivery', () => {
     assert.equal(second.body.value.delivery.targetSessionId, 's-02')
     assert.match(second.body.value.delivery.note, /不足/)
     assert.equal(harness.followups.length, 1)
+  })
+
+  it('reports a failed wake as failed instead of hiding it as mailbox', async () => {
+    const local = await boot()
+    try {
+      const agent = local.agents.get('s-02')
+      agent.followup = async () => { throw new Error('followup exploded') }
+      const sent = await local.call('send', {
+        fromSessionId: 's-01',
+        to: 'session:s-02',
+        body: 'failure path',
+        wake: true,
+      })
+      assert.equal(sent.status, 200)
+      assert.equal(sent.body.value.delivery.requested, 'wake')
+      assert.equal(sent.body.value.delivery.mode, 'failed')
+      assert.equal(sent.body.value.delivery.delivered, false)
+      assert.match(sent.body.value.delivery.error, /followup exploded/)
+      assert.equal(sent.body.value.delivery.attempts, 1)
+      const stored = await local.call('state', { sessionId: 's-02' })
+      assert.equal(stored.body.value.messages[0].delivery.mode, 'failed')
+      assert.match(stored.body.value.messages[0].delivery.error, /followup exploded/)
+    } finally {
+      await local.destroy()
+    }
+  })
+
+  it('caps manual delivery attempts and exposes attempts on each retry', async () => {
+    const local = await boot()
+    try {
+      await local.call('settings', { patch: { targetWakeCooldownSeconds: 0, wakesPerMinute: 0 } })
+      const sent = await local.call('send', {
+        fromSessionId: 's-01',
+        to: 'session:s-02',
+        body: 'retry cap',
+        wake: false,
+      })
+      const id = sent.body.value.message.id
+      assert.equal(sent.body.value.delivery.mode, 'mailbox')
+      assert.equal(sent.body.value.delivery.attempts, 1)
+
+      let last
+      for (let attempt = 2; attempt <= MAX_DELIVERY_ATTEMPTS; attempt += 1) {
+        last = await local.call('deliver', { id })
+        assert.equal(last.status, 200)
+        assert.equal(last.body.value.delivery.attempts, attempt)
+      }
+      assert.equal(last.body.value.delivery.attempts, MAX_DELIVERY_ATTEMPTS)
+      assert.equal(last.body.value.delivery.mode, 'wake')
+
+      const capped = await local.call('deliver', { id })
+      assert.equal(capped.status, 400)
+      assert.equal(capped.body.error.code, 'retry-limit')
+    } finally {
+      await local.destroy()
+    }
   })
 
   it('queues a wake to a running agent instead of claiming delivery', async () => {
@@ -1920,6 +1976,29 @@ describe('manual groups — send and state', () => {
     assert.equal(managementInbox.body.value.messages.length, 0)
   })
 
+  it('markAll makes a send-time group snapshot satisfy clear(read)', async () => {
+    const local = await boot()
+    try {
+      const group = await createGroupFixture(local, 'Clear Team', ['s-02', 's-03'])
+      const sent = await local.call('send', {
+        fromSessionId: 's-01',
+        to: group.name,
+        body: 'clear after markAll',
+        wake: false,
+      })
+      assert.equal(sent.status, 200)
+      const id = sent.body.value.message.id
+      const marked = await local.call('markAll')
+      assert.equal(marked.status, 200)
+      const cleared = await local.call('clear', { scope: 'read' })
+      assert.equal(cleared.status, 200)
+      const state = await local.call('state', { filter: 'all' })
+      assert.equal(state.body.value.messages.some(message => message.id === id), false)
+    } finally {
+      await local.destroy()
+    }
+  })
+
   it('wakes idle members and records per-member delivery results', async () => {
     await harness.call('settings', { patch: { targetWakeCooldownSeconds: 0, wakesPerMinute: 0 } })
     const group = await createGroupFixture(harness, 'Wake Team', ['s-01', 's-02', 's-03'])
@@ -2312,7 +2391,7 @@ describe('wake turn-start verification', () => {
     }
   })
 
-  it('downgrades a queued wake when no turn start is observed', async () => {
+  it('reports a queued wake as failed when no turn start is observed', async () => {
     const local = await boot({ turnBoundary: true })
     try {
       const sent = await local.call('send', {
@@ -2324,11 +2403,11 @@ describe('wake turn-start verification', () => {
       assert.equal(sent.status, 200)
       const delivery = sent.body.value.delivery
       assert.equal(delivery.requested, 'wake')
-      assert.equal(delivery.mode, 'mailbox')
+      assert.equal(delivery.mode, 'failed')
       assert.equal(delivery.delivered, false)
       assert.equal(delivery.targetSessionId, 's-02')
       assert.match(delivery.note, /已入队但未观察到会话启动/)
-      assert.equal(sent.body.value.message.delivery.mode, 'mailbox')
+      assert.equal(sent.body.value.message.delivery.mode, 'failed')
       assert.equal(sent.body.value.message.delivery.delivered, false)
       assert.match(sent.body.value.message.delivery.note, /已入队但未观察到会话启动/)
       assert.equal(local.turnState.get('s-02') ?? 0, 0)
@@ -2367,7 +2446,7 @@ describe('wake turn-start verification', () => {
       const started = delivery.members.find(member => member.sessionId === 's-02')
       const queued = delivery.members.find(member => member.sessionId === 's-04')
       assert.deepEqual(started, { sessionId: 's-02', mode: 'wake' })
-      assert.equal(queued.mode, 'mailbox')
+      assert.equal(queued.mode, 'failed')
       assert.match(queued.note, /已入队但未观察到会话启动/)
       assert.match(delivery.note, /已确认唤醒 1 个/)
       assert.equal(local.followups.length, 2)
@@ -2455,11 +2534,11 @@ describe('wake message-admission verification (eventsSnapshot)', () => {
       assert.equal(sent.status, 200)
       const delivery = sent.body.value.delivery
       assert.equal(delivery.requested, 'wake')
-      assert.equal(delivery.mode, 'mailbox')
+      assert.equal(delivery.mode, 'failed')
       assert.equal(delivery.delivered, false)
       assert.equal(delivery.targetSessionId, 's-02')
       assert.match(delivery.note, /已入队但未观察到会话启动/)
-      assert.equal(sent.body.value.message.delivery.mode, 'mailbox')
+      assert.equal(sent.body.value.message.delivery.mode, 'failed')
       assert.equal(sent.body.value.message.delivery.delivered, false)
 
       // The turn did start (marker advanced) but no user/message was admitted.
@@ -2513,7 +2592,7 @@ describe('wake message-admission verification (eventsSnapshot)', () => {
       const admitted = delivery.members.find(member => member.sessionId === 's-02')
       const blocked = delivery.members.find(member => member.sessionId === 's-04')
       assert.deepEqual(admitted, { sessionId: 's-02', mode: 'wake' })
-      assert.equal(blocked.mode, 'mailbox')
+      assert.equal(blocked.mode, 'failed')
       assert.match(blocked.note, /已入队但未观察到会话启动/)
       assert.match(delivery.note, /已确认唤醒 1 个/)
 

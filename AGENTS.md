@@ -7,7 +7,7 @@
 
 - 当前版本：`0.8.5`
 - 文档最后同步：2026-11-08
-- 当前测试：**193 tests / 58 suites，193 pass / 0 fail**
+- 当前测试：**200 tests / 58 suites，200 pass / 0 fail**
 - 插件类型：Cordis bundle（Host 半 + Web Client 半），本地 `link:` 安装
 - 运行范围：本机同一个 DSH Host 进程，不经过网络
 
@@ -75,10 +75,10 @@ package.json             bundle + client 清单、exports、files
    不要传 `{content, source}` 草稿（会触发 `messages[N]: missing field role`）。
 3. **wake 必须确认接纳**：followup 后轮询 `agent.session.snapshotEvents()`，看到**本次生成的 UserMessage id**
    出现在 `user/message` 才算 `mode:'wake'`；`turn/start` 后 `turn/end blocked` 不算。
-   最长等 1.6s；没确认就退回 `mailbox`/排队，不许谎报。
+   最长等 1.6s；没确认就记 `failed`/排队，不许谎报。
    **目标正在运行**时先等 `waitForIdleSeconds`：等到空闲 → 正常 wake 确认；超时/0 → followup 排队，
    `mode:'queued'`、`delivered:false`（当前轮结束后的下一轮才处理，尚未启动）。
-   **任何情况下都不能凭工具成功就宣称对方收到**；`wake` 才是已确认启动，`queued`/`mailbox` 都不是。
+   **任何情况下都不能凭工具成功就宣称对方收到**；`wake` 才是已确认启动，`queued`/`mailbox`/`failed` 都不是。
 4. **列表过滤**：`isListableSession = !blank && !archived && !unknown`。空白、已归档、失效会话不得出现在
    `workspace_list`、面板工作区列表、orphan 列表、群组可选会话里。已有群组的历史成员快照按存储保留。
 5. **广播唤醒只选可列出会话**：不再回退到空白会话；发送方自己永远排除；没有候选 →
@@ -86,7 +86,7 @@ package.json             bundle + client 清单、exports、files
 6. **群组按发送时成员快照 + 当前成员**：`to.memberSessionIds` 是快照；默认全部成员可见，`memberSessionIds` 子集
    则只有选中成员可见；子集必须是群组成员，发送方自动排除；**被移出群后旧消息也不可读**，新成员看不到入群前
    消息；群组删除时冻结“删除时仍在群”的成员，只有快照∩删除时成员保留历史访问，被移出的成员不会因删群恢复；
-   回复群消息回群组；删群组不删消息。
+   **读义务只用发送时快照（排除 sender），冻结快照只负责可见性**；回复群消息回群组；删群组不删消息。
 7. **附件安全**：默认只允许发送方工作区内文件（`realpath` 校验）；`nlink > 1` 拒绝；
    `allowExternalAttachments=true` 会**同时**放宽工作区根与硬链接校验（显式风险），不要默认开。
 8. **管理 API 安全**：仅 POST + `x-dsh-cross-workspace: 1`；有 `connection` 时唯一准入是
@@ -177,10 +177,10 @@ requested=wake
   │    ├─ 等到空闲 ──────────────────────────────► followup + 确认
   │    └─ 超时/0 ────────────────────────────────► queued（下一轮，未确认启动）
   ├─ 无目标会话（工作区/群组空） ─────────────────► none
-  ├─ 群组：逐成员如上；mode 优先级 wake > queued > mailbox
+  ├─ 群组：逐成员如上；mode 优先级 wake > queued > failed > mailbox
   └─ 单会话：followup
         ├─ 1.6s 内确认 user/message 进入日志 ──────► wake/delivered:true
-        └─ 未确认（归档/阻塞/慢启动） ─────────────► mailbox/delivered:false
+        └─ 未确认（归档/阻塞/慢启动） ─────────────► failed/delivered:false
 ```
 
 硬规则：
@@ -200,7 +200,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs
 ```
 
-当前基线：**193 tests / 58 suites，193 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
+当前基线：**200 tests / 58 suites，200 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
 连跑两次一致才算稳定。
 
 ### 语法与清单

@@ -25,7 +25,7 @@ flowchart TB
     Tools["6 个 agent 工具"]
     Context["systemPrompt.context<br/>未读摘要（可选）"]
     Store["MailStore<br/>store.json + attachments/"]
-    Delivery["delivery<br/>wake / queued / mailbox / none"]
+    Delivery["delivery<br/>wake / queued / mailbox / failed / none"]
     Index["buildIndex<br/>workspace + session + orphan + archive flags"]
   end
 
@@ -98,7 +98,7 @@ sequenceDiagram
     alt 确认 user/message 进入日志
       D->>S: delivery=wake, delivered=true
     else 等待超时 / 未确认 / 归档 / 限流
-      D->>S: delivery=queued 或 mailbox, delivered=false + note
+      D->>S: delivery=queued / mailbox / failed, delivered=false + note
     end
   end
   D-->>H: 实际 delivery
@@ -291,12 +291,13 @@ flowchart TD
   LIM -- 否 --> FU[followup 完整 UserMessage]
   FU --> ACK{1.6s 内确认 user/message?}
   ACK -- 是 --> WK[wake / delivered true]
-  ACK -- 否 --> MB2[mailbox / delivered false + note]
+  ACK -- 否 --> FAIL[failed / delivered false + note / 可重试]
   GM --> GM1[逐成员：空闲 followup / 运行中等待→queued]
   GM1 --> GM2{逐成员确认}
   GM2 -- ≥1 确认 --> WK2[wake / members[]]
   GM2 -- 0 确认但有 queued --> QG[queued / members[]]
-  GM2 -- 无 wake 无 queued --> MB
+  GM2 -- 无 wake 无 queued，有成员 failed --> FG[failed / members[]]
+  GM2 -- 无 wake 无 queued 无 failed --> MB
 ```
 
 **为什么不直接相信 followup 返回值**
@@ -367,7 +368,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs
 ```
 
-基线：**193 tests / 58 suites，193 pass / 0 fail**，连跑两次一致。
+基线：**200 tests / 58 suites，200 pass / 0 fail**，连跑两次一致。
 
 ---
 
@@ -376,9 +377,10 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 | 失败 | 表现 | 恢复 |
 |---|---|---|
 | `store.json` 损坏 | 自动改名 `store.corrupt-<ts>.json`，空库启动 | 从备份恢复文件；不要删用户数据 |
-| 目标归档/阻塞 | wake 报 mailbox + 已入队 note | 打开目标会话或用 mailbox；不谎报 |
+| 目标归档/阻塞 | wake 报 failed + 已入队 note；消息仍保存 | 在列表/详情手动重试；`failed` 不谎报 |
 | 目标运行中 | 先等 waitForIdleSeconds；超时/0 → queued | 目标自己会 `mail_inbox`/`mail_wait`；queued 表示下一轮处理 |
 | 唤醒限流/冷却 | 降级 mailbox + note | 稍后重试或调设置 |
+| 唤醒失败/未确认 | failed + error/note，`attempts` 计数 | 手动重试，最多 5 次；达到上限返回 `retry-limit` |
 | 附件越界 | `attachment-outside-workspace` | 复制进工作区或显式开允许 |
 | Client 面板空白 | slot crash / state 403 | 刷新、看 console、检查 fence/header |
 | 改代码不生效 | linked package 未替换 | 关闭再开启插件；Client 刷新 |

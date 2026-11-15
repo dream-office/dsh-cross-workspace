@@ -640,6 +640,53 @@ describe('retention and clearing', () => {
 
     await expectCode(store.clear('bogus'), 'invalid-scope')
   })
+
+  it('clear(read) uses the send-time snapshot and never adds later/frozen members', async () => {
+    const { store } = await newStore()
+    const group = await store.createGroup({ name: 'snapshot group', sessionIds: ['s-a', 's-b'] })
+    const message = await store.addMessage(input({
+      body: 'snapshot boundary',
+      to: { groupId: group.id, memberSessionIds: ['s-a', 's-b'] },
+    }))
+
+    // C joins after the send, then the group is deleted. C must not become a
+    // read obligation for the older message.
+    await store.updateGroup(group.id, { addSessionIds: ['s-c'] })
+    await store.deleteGroup(group.id)
+    assert.equal(store.isFullyRead(store.getMessage(message.id)), false)
+    store.markAllRead()
+    assert.equal(store.isFullyRead(store.getMessage(message.id)), true)
+    assert.deepEqual(await store.clear('read'), { removed: 1 })
+  })
+
+  it('clear(read) keeps a sent group message when a send-time member has not read it', async () => {
+    const { store } = await newStore()
+    const group = await store.createGroup({ name: 'partial boundary', sessionIds: ['s-a', 's-b'] })
+    const message = await store.addMessage(input({
+      body: 'partial boundary',
+      to: { groupId: group.id, memberSessionIds: ['s-a', 's-b'] },
+    }))
+    // Membership changes after send must not change B's read obligation.
+    await store.updateGroup(group.id, { sessionIds: ['s-a', 's-c'] })
+    await store.deleteGroup(group.id)
+    store.markRead(message.id, 's:s-a')
+    assert.equal(store.isFullyRead(store.getMessage(message.id)), false)
+    assert.deepEqual(await store.clear('read'), { removed: 0 })
+    assert.ok(store.getMessage(message.id))
+  })
+
+  it('clear(read) excludes the sender even if a legacy snapshot contains it', async () => {
+    const { store } = await newStore()
+    const group = await store.createGroup({ name: 'sender in snapshot', sessionIds: ['s-sender', 's-a'] })
+    const message = await store.addMessage(input({
+      body: 'legacy snapshot',
+      to: { groupId: group.id, memberSessionIds: ['s-sender', 's-a'] },
+    }))
+    store.markRead(message.id, 's:s-sender')
+    assert.equal(store.isFullyRead(store.getMessage(message.id)), false)
+    store.markRead(message.id, 's:s-a')
+    assert.equal(store.isFullyRead(store.getMessage(message.id)), true)
+  })
 })
 
 describe('corruption recovery and settings', () => {
