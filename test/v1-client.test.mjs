@@ -259,6 +259,43 @@ describe('v1 rewrite client skeleton', () => {
     }
   })
 
+  it('builds compose and group-editor payloads from real button handlers', () => {
+    const env = load(data, 'compose')
+    const payloads = []
+    const compose = env.direct(env.plugin.__test.ComposeView, {
+      t: (zh, en) => en,
+      groups: data.groups,
+      workspaces: data.workspaces,
+      replyTo: data.messages[0],
+      mySessionId: 's-me',
+      onSend(payload) { payloads.push(payload); return Promise.resolve({}) },
+      onCancel() {},
+      onSent() {},
+    })
+    clickableByText(compose, 'Send').props.onClick()
+    assert.equal(payloads.length, 1)
+    assert.equal(payloads[0].fromSessionId, 's-me')
+    assert.equal(payloads[0].replyTo, 'm1')
+    assert.equal(payloads[0].toSessionId, 's-other')
+    assert.equal(payloads[0].to, 'Other')
+
+    const saves = []
+    const editor = env.direct(env.plugin.__test.GroupEditorView, {
+      t: (zh, en) => en,
+      group: { id: 'g1', name: 'Group', memberSessionIds: ['s-me', 's-other'] },
+      workspaces: data.workspaces,
+      onCancel() {},
+      onSave(action, payload) { saves.push({ action, payload }); return Promise.resolve({}) },
+      onSaved() {},
+    })
+    clickableByText(editor, 'Save').props.onClick()
+    assert.equal(saves.length, 1)
+    assert.equal(saves[0].action, 'groupUpdate')
+    assert.equal(saves[0].payload.id, 'g1')
+    assert.equal(saves[0].payload.name, 'Group')
+    assert.deepEqual(saves[0].payload.sessionIds, ['s-me', 's-other'])
+  })
+
   it('keeps explicit buttons and no empty handlers in source', () => {
     assert.doesNotMatch(source, /onClick:\s*function\s*\(\)\s*\{\s*\}/)
     assert.match(source, /function navigate\(/)

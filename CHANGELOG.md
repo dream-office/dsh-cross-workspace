@@ -11,8 +11,8 @@
   `navigate/back`，显式按钮 handler；build stamp `1.0.0-rewrite 6de2823`。
 - 深/浅色主题；KPI/7天/环形/三卡/消息表；消息、群组、工作区、交流图、设置、详情、发送抽屉、群组编辑。
 - `package.json` `exports["./client"]` 指向 `client.v1.js`；旧 `client.js` 保留作回滚/旧契约测试。
-- 测试：新增 `test/v1-client.test.mjs`（App 渲染、8 个 view、Dashboard KPI/表格、消息/详情、群组/工作区、交流图/设置、顶栏按钮、build stamp、无空 handler）；
-  **224 tests / 60 suites 全绿**。旧 client 契约测试仍保留。
+- 测试：新增 `test/v1-client.test.mjs`（App 渲染、8 个 view、Dashboard KPI/表格、消息/详情、群组/工作区、交流图/设置、顶栏按钮、compose/群组编辑 payload、build stamp、无空 handler）；
+  **225 tests / 60 suites 全绿**。旧 client 契约测试仍保留。
 - 未 push/Release；未做真实浏览器截图。
 
 ## 2026-11-15 · v4 stats（开发中，未定版本）
