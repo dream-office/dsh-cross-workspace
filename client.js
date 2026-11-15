@@ -776,6 +776,73 @@ window.__ModuleLoader__.load({
 .dshcw-net-event:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 @media (max-width:900px){.dshcw-net-layout{flex-direction:column;overflow:auto}.dshcw-net-layout > .dshcw-scroll{min-height:280px}.dshcw-net-side{width:auto;flex:none;max-height:320px}}
 @keyframes dshcw-spin{to{transform:rotate(360deg)}}
+.dshcw-dash{--dshcw-accent:#00A2BD;--dshcw-on-accent:#0B1A1F;--dshcw-accent-ink:#006B7D;--dshcw-accent-soft:#E6F7FA;--dshcw-accent-2:#3B82F6;--dshcw-status-delivered:#15803d;--dshcw-status-queued:#b45309;--dshcw-status-failed:#b91c1c;--dshcw-status-mailbox:#2563eb;--dshcw-status-none:#6b7280;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;overflow:auto;padding-bottom:8px}
+@media (prefers-color-scheme:dark){.dshcw-dash{--dshcw-accent:#4FC3D9;--dshcw-on-accent:#0B1A1F;--dshcw-accent-ink:#7DD8E8;--dshcw-accent-soft:rgba(79,195,217,.16);--dshcw-accent-2:#7FB2FF}}
+.dshcw-dash-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.dshcw-dash-title{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.dshcw-dash-title h1{margin:0;font-size:20px;line-height:26px;font-weight:700;color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dshcw-dash-version{font-size:10px;color:var(--dshcw-accent-ink);border:1px solid var(--dshcw-accent);border-radius:999px;padding:1px 6px;white-space:nowrap}
+.dshcw-dash-scope{font-size:10px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}
+.dshcw-dash-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.dshcw-dash-seg{display:inline-flex;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;overflow:hidden;flex:none}
+.dshcw-dash-seg .dshcw-btn{min-height:28px;border:0;border-radius:0;padding:0 9px;font-size:11px;color:var(--dsw-alias-label-secondary);background:transparent}
+.dshcw-dash-seg .dshcw-dash-seg-on{background:var(--dshcw-accent-soft);color:var(--dshcw-accent-ink);font-weight:600}
+.dshcw-dash-search{width:180px;min-height:32px;font-size:12px}
+.dshcw-dash-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.dshcw-dash-kpi{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--dsw-alias-border-l1);border-radius:20px;background:var(--dsw-alias-bg-layer-1);min-width:0}
+.dshcw-dash-kpi-label{font-size:11px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dshcw-dash-kpi-value{font-size:24px;line-height:30px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary)}
+.dshcw-dash-kpi-hint{font-size:10px;line-height:14px;color:var(--dsw-alias-label-tertiary)}
+.dshcw-dash-body{display:flex;flex-direction:column;gap:12px;min-width:0}
+.dshcw-dash-charts{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;min-width:0}
+.dshcw-dash-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-width:0}
+.dshcw-dash-card{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--dsw-alias-border-l1);border-radius:20px;background:var(--dsw-alias-bg-layer-1);min-width:0;overflow:hidden}
+.dshcw-dash-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.dshcw-dash-card-head h2{margin:0;font-size:13px;line-height:18px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dshcw-dash-card-head > span{font-size:10px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}
+.dshcw-dash-bars{display:flex;align-items:flex-end;gap:8px;min-height:138px;height:138px;padding-top:4px;min-width:0}
+.dshcw-dash-bar-day{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;height:100%}
+.dshcw-dash-bar-pair{display:flex;align-items:flex-end;gap:2px;flex:1;width:100%;min-height:0}
+.dshcw-dash-bar-pair span{flex:1;border-radius:3px 3px 0 0;min-height:2px;display:block}
+.dshcw-dash-bar-recv{background:var(--dshcw-accent)}
+.dshcw-dash-bar-sent{background:var(--dshcw-accent-2)}
+.dshcw-dash-bar-label{font-size:10px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}
+.dshcw-dash-bar-total{font-size:10px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}
+.dshcw-dash-donut-wrap{display:flex;align-items:center;gap:14px;min-width:0;flex-wrap:wrap}
+.dshcw-dash-donut{width:132px;height:132px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;position:relative}
+.dshcw-dash-donut-hole{width:96px;height:96px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.dshcw-dash-donut-hole strong{font-size:18px;line-height:22px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.dshcw-dash-donut-hole span{font-size:10px;color:var(--dsw-alias-label-tertiary)}
+.dshcw-dash-legend{display:grid;gap:5px;min-width:0;flex:1}
+.dshcw-dash-legend-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dsw-alias-label-secondary);min-width:0}
+.dshcw-dash-legend-row > span:first-child{width:8px;height:8px;border-radius:2px;flex:none}
+.dshcw-dash-legend-row strong{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary)}
+.dshcw-dash-row{display:flex;align-items:center;gap:8px;min-height:30px;padding:0;border:0;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;text-align:left;cursor:pointer;min-width:0}
+.dshcw-dash-row:hover{color:var(--dsw-alias-label-primary)}
+.dshcw-dash-muted{font-size:11px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}
+.dshcw-dash-nodata{font-size:11px;color:var(--dsw-alias-label-tertiary);padding:8px 0}
+.dshcw-dash-bar-row{display:flex;align-items:center;gap:8px;min-height:28px;font-size:11px;color:var(--dsw-alias-label-secondary);min-width:0}
+.dshcw-dash-bar-row > span:first-child{flex:1;min-width:60px}
+.dshcw-dash-bar-row strong{font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);min-width:24px;text-align:right}
+.dshcw-dash-mini-bar{width:70px;height:8px;border-radius:999px;background:var(--dsw-alias-bg-layer-2);flex:none;overflow:hidden}
+.dshcw-dash-mini-bar i{display:block;height:100%;border-radius:999px;background:var(--dshcw-accent)}
+.dshcw-dash-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dshcw-dash-stats > div{display:flex;flex-direction:column;gap:1px;padding:8px;border-radius:12px;background:var(--dsw-alias-bg-layer-2);min-width:0}
+.dshcw-dash-stats strong{font-size:16px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary)}
+.dshcw-dash-stats span{font-size:10px;color:var(--dsw-alias-label-tertiary)}
+.dshcw-dash-table{display:flex;flex-direction:column;min-width:0}
+.dshcw-dash-tr{display:grid;grid-template-columns:74px minmax(90px,1fr) minmax(120px,2.4fr) 88px 56px;align-items:center;gap:8px;min-height:38px;padding:4px 0;border-bottom:.5px solid var(--dsw-alias-border-l1);font-size:11px;min-width:0}
+.dshcw-dash-th{font-size:10px;color:var(--dsw-alias-label-tertiary);min-height:26px}
+.dshcw-dash-subject{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:11px;text-align:left;cursor:pointer;padding:0}
+.dshcw-dash-status{min-width:0;overflow:hidden}
+.dshcw-dash-retry{min-height:26px;padding:0 7px;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:transparent;color:var(--dshcw-accent-ink);font:inherit;font-size:10px;cursor:pointer}
+.dshcw-dash-link{border:0;background:transparent;color:var(--dshcw-accent-ink);font:inherit;font-size:11px;cursor:pointer;padding:0;white-space:nowrap}
+.dshcw-dash-table-actions{display:flex;align-items:center;gap:10px;flex:none}
+.dshcw-dash-empty{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:32px;border:1px solid var(--dsw-alias-border-l1);border-radius:20px;background:var(--dsw-alias-bg-layer-1)}
+.dshcw-dash-empty h2{margin:0;font-size:16px;color:var(--dsw-alias-label-primary)}
+.dshcw-dash-empty p{margin:0;font-size:12px;color:var(--dsw-alias-label-secondary)}
+@media (max-width:1100px){.dshcw-dash-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.dshcw-dash-charts,.dshcw-dash-cards{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){.dshcw-dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dshcw-dash-kpi:nth-child(n+5){display:none}.dshcw-dash-search{width:100%;flex:1 1 140px}.dshcw-dash-actions{width:100%}.dshcw-dash-table .dshcw-dash-th{display:none}.dshcw-dash-tr{grid-template-columns:1fr auto;gap:3px 8px;padding:8px 0}.dshcw-dash-tr > span:nth-child(1){grid-column:1;font-size:10px}.dshcw-dash-tr > span:nth-child(4){grid-column:2;grid-row:1}.dshcw-dash-tr > span:nth-child(2){grid-column:1}.dshcw-dash-tr > span:nth-child(5){grid-column:2;grid-row:2}.dshcw-dash-subject{grid-column:1 / -1;white-space:normal;overflow-wrap:anywhere}}
 @media (prefers-reduced-motion:reduce){.dshcw-spinner{animation:none}.dshcw-row{transition:none}.dshcw-switch-track,.dshcw-switch-track:before{transition:none}}
 `
 
@@ -1188,6 +1255,222 @@ window.__ModuleLoader__.load({
     }
     // CHIP_COUNTS_END
 
+    function DashboardView(props) {
+      const t = props.t
+      const data = props.data
+      const stats = props.stats
+      const messages = Array.isArray(props.messages) ? props.messages : []
+      const groups = Array.isArray(props.groups) ? props.groups : []
+      const workspaces = Array.isArray(props.workspaces) ? props.workspaces : []
+      const [query, setQuery] = React.useState('')
+      const [range, setRange] = React.useState(7)
+      const [rows, setRows] = React.useState(6)
+      const now = props.now || Date.now()
+      const viewer = data && data.viewer ? data.viewer : {}
+      const title = viewer.workspaceTitle || viewer.sessionTitle || t('跨工作区信使', 'Cross-workspace courier')
+      if (!stats) {
+        return h('div', { className: 'dshcw-dash' },
+          h('div', { className: 'dshcw-dash-empty' },
+            h('h2', null, t('正在加载仪表盘…', 'Loading dashboard…')),
+            h('p', null, t('统计来自 state.stats 的全量聚合。', 'Stats come from the full state.stats aggregate.'))))
+      }
+
+      const search = query.trim().toLowerCase()
+      const cutoff = range === 1 ? now - 24 * 60 * 60 * 1000 : (range === 30 ? now - 30 * 24 * 60 * 60 * 1000 : now - 7 * 24 * 60 * 60 * 1000)
+      const tableMessages = messages.filter(function (mail) {
+        if (!mail || Number(mail.createdAt) < cutoff) return false
+        if (!search) return true
+        const hay = [mail.subject, mail.body, mail.from && mail.from.sessionTitle, mail.from && mail.from.workspaceTitle, mail.to && mail.to.groupName].join(' ').toLowerCase()
+        return hay.includes(search)
+      })
+      const visibleRows = tableMessages.slice(0, rows)
+      const modeTotal = stats ? stats.delivered + stats.queued + stats.failed + stats.mailbox + stats.none : 0
+      const success = stats && modeTotal > 0 ? Math.round((stats.delivered / modeTotal) * 100) : null
+      const kpis = stats ? [
+        { key: 'unread', label: t('未读', 'Unread'), value: stats.unread, tone: 'accent' },
+        { key: 'sent', label: t('已发出', 'Sent'), value: stats.sent },
+        { key: 'failed', label: t('失败待重试', 'Failed / retry'), value: stats.failed, tone: 'danger' },
+        { key: 'groups', label: t('群组', 'Groups'), value: stats.groups },
+        { key: 'workspaces', label: t('工作区', 'Workspaces'), value: stats.workspaces },
+        { key: 'success', label: t('成功率', 'Success rate'), value: success === null ? '—' : success + '%' },
+      ] : []
+      const maxDay = stats && stats.days.length > 0
+        ? Math.max(1, ...stats.days.map(function (day) { return day.sent + day.received }))
+        : 1
+      const statusTotal = modeTotal || 1
+      const donut = stats
+        ? [
+            { key: 'delivered', value: stats.delivered, color: 'var(--dshcw-status-delivered)' },
+            { key: 'queued', value: stats.queued, color: 'var(--dshcw-status-queued)' },
+            { key: 'failed', value: stats.failed, color: 'var(--dshcw-status-failed)' },
+            { key: 'mailbox', value: stats.mailbox, color: 'var(--dshcw-status-mailbox)' },
+            { key: 'none', value: stats.none, color: 'var(--dshcw-status-none)' },
+          ]
+        : []
+      let cursor = 0
+      const donutStops = donut.map(function (item) {
+        const start = cursor / statusTotal * 100
+        cursor += item.value
+        const end = cursor / statusTotal * 100
+        return item.color + ' ' + start + '% ' + end + '%'
+      }).filter(function (stop, index) { return donut[index].value > 0 })
+      const donutBackground = donutStops.length > 0
+        ? 'conic-gradient(' + donutStops.join(', ') + ')'
+        : 'var(--dsw-alias-bg-layer-2)'
+
+      function card(label, value, hint, tone) {
+        return h('div', { key: label, className: 'dshcw-dash-kpi' },
+          h('span', { className: 'dshcw-dash-kpi-label' }, label),
+          h('strong', {
+            className: 'dshcw-dash-kpi-value',
+            style: tone === 'accent' ? { color: 'var(--dshcw-accent-ink)' } : (tone === 'danger' ? { color: 'var(--dshcw-status-failed)' } : undefined),
+          }, String(value)),
+          hint ? h('span', { className: 'dshcw-dash-kpi-hint' }, hint) : null
+        )
+      }
+
+      return h('div', { className: 'dshcw-dash' },
+        h('div', { className: 'dshcw-dash-head' },
+          h('div', { className: 'dshcw-dash-title' },
+            h('h1', null, title),
+            h('span', { className: 'dshcw-dash-version' }, 'v0.9'),
+            h('span', { className: 'dshcw-dash-scope' }, t('按本地保留范围', 'Local retention scope'))),
+          h('div', { className: 'dshcw-dash-actions' },
+            h('div', { className: 'dshcw-dash-seg', role: 'group', 'aria-label': t('时间范围', 'Time range') },
+              [[1, t('今天', 'Today')], [7, t('近7天', '7 days')], [30, t('近30天', '30 days')]].map(function (pair) {
+                return h('button', {
+                  key: pair[0],
+                  type: 'button',
+                  className: 'dshcw-btn' + (range === pair[0] ? ' dshcw-dash-seg-on' : ''),
+                  onClick: function () { setRange(pair[0]); setRows(6) },
+                }, pair[1])
+              })),
+            h('input', {
+              className: 'dshcw-input dshcw-dash-search',
+              value: query,
+              placeholder: t('搜索消息…', 'Search messages…'),
+              'aria-label': t('搜索消息', 'Search messages'),
+              onChange: function (event) { setQuery(event.target.value) },
+            }),
+            h(Button, { variant: 'outline', onClick: props.onRefresh, style: { minHeight: 32 } }, t('刷新', 'Refresh')),
+            h(Button, {
+              variant: 'primary',
+              onClick: props.onNew,
+              style: { minHeight: 32, background: 'var(--dshcw-accent)', borderColor: 'var(--dshcw-accent)', color: 'var(--dshcw-on-accent)' },
+            }, t('新消息', 'New message'))
+          )
+        ),
+        stats && stats.total === 0
+          ? h('div', { className: 'dshcw-dash-empty' },
+              h('h2', null, t('还没有投递记录', 'No delivery records yet')),
+              h('p', null, t('发第一条消息，KPI 和图表会从这里开始。', 'Send your first message; KPIs and charts start here.')),
+              h(Button, {
+                variant: 'primary',
+                onClick: props.onNew,
+                style: { background: 'var(--dshcw-accent)', borderColor: 'var(--dshcw-accent)', color: 'var(--dshcw-on-accent)' },
+              }, t('发第一条', 'Send first message')))
+          : h('div', { className: 'dshcw-dash-body' },
+              h('div', { className: 'dshcw-dash-kpis' }, kpis.map(function (item) {
+                return card(item.label, item.value, item.key === 'failed' ? t('点最近消息可重试', 'Retry from recent rows') : '', item.tone)
+              })),
+              h('div', { className: 'dshcw-dash-charts' },
+                h('section', { className: 'dshcw-dash-card' },
+                  h('div', { className: 'dshcw-dash-card-head' },
+                    h('h2', null, t('近 7 天收发量', 'Last 7 days')), h('span', null, t('收 / 发', 'received / sent'))),
+                  stats && stats.days.some(function (day) { return day.sent + day.received > 0 })
+                    ? h('div', { className: 'dshcw-dash-bars', role: 'img', 'aria-label': t('近 7 天收发柱状图', 'Last 7 days bar chart') },
+                        stats.days.map(function (day) {
+                          const total = day.sent + day.received
+                          return h('div', { key: day.date, className: 'dshcw-dash-bar-day', title: day.date + ' · ' + t('收 ', 'received ') + day.received + ' / ' + t('发 ', 'sent ') + day.sent },
+                            h('div', { className: 'dshcw-dash-bar-pair' },
+                              h('span', { className: 'dshcw-dash-bar-recv', style: { height: Math.max(2, day.received / maxDay * 100) + '%' } }),
+                              h('span', { className: 'dshcw-dash-bar-sent', style: { height: Math.max(2, day.sent / maxDay * 100) + '%' } })),
+                            h('span', { className: 'dshcw-dash-bar-label' }, day.date.slice(5)),
+                            h('span', { className: 'dshcw-dash-bar-total' }, String(total)))
+                        }))
+                    : h('div', { className: 'dshcw-dash-nodata' }, t('近 7 天还没有数据', 'No data in the last 7 days'))),
+                h('section', { className: 'dshcw-dash-card dshcw-dash-donut-card' },
+                  h('div', { className: 'dshcw-dash-card-head' },
+                    h('h2', null, t('投递状态分布', 'Delivery status')),
+                    h('span', null, t('按消息计', 'per message'))),
+                  h('div', { className: 'dshcw-dash-donut-wrap' },
+                    h('div', { className: 'dshcw-dash-donut', style: { background: donutBackground } },
+                      h('div', { className: 'dshcw-dash-donut-hole' },
+                        h('strong', null, success === null ? '—' : success + '%'),
+                        h('span', null, t('成功率', 'success')))),
+                    h('div', { className: 'dshcw-dash-legend' },
+                      [
+                        [t('已投递', 'Delivered'), stats.delivered, 'var(--dshcw-status-delivered)'],
+                        [t('排队', 'Queued'), stats.queued, 'var(--dshcw-status-queued)'],
+                        [t('失败', 'Failed'), stats.failed, 'var(--dshcw-status-failed)'],
+                        [t('信箱', 'Mailbox'), stats.mailbox, 'var(--dshcw-status-mailbox)'],
+                        [t('无目标', 'None'), stats.none, 'var(--dshcw-status-none)'],
+                      ].map(function (row) {
+                        return h('div', { key: row[0], className: 'dshcw-dash-legend-row' },
+                          h('span', { style: { background: row[2] } }),
+                          h('span', { className: 'dshcw-truncate' }, row[0]),
+                          h('strong', null, String(row[1])))
+                      })))))
+              ),
+              h('div', { className: 'dshcw-dash-cards' },
+                h('section', { className: 'dshcw-dash-card' },
+                  h('div', { className: 'dshcw-dash-card-head' }, h('h2', null, t('群组', 'Groups')),
+                    h('button', { type: 'button', className: 'dshcw-dash-link', onClick: props.onGroups }, t('管理 →', 'Manage →'))),
+                  groups.length === 0
+                    ? h('div', { className: 'dshcw-dash-nodata' }, t('还没有群组', 'No groups yet'))
+                    : groups.slice(0, 4).map(function (group) {
+                        return h('button', { key: group.id, type: 'button', className: 'dshcw-dash-row', onClick: function () { props.onGroup(group) } },
+                          h('span', { className: 'dshcw-truncate' }, group.name || group.id),
+                          h('span', { className: 'dshcw-dash-muted' }, (typeof group.unread === 'number' ? group.unread : 0) + t(' 未读', ' unread')))
+                      })),
+                h('section', { className: 'dshcw-dash-card' },
+                  h('div', { className: 'dshcw-dash-card-head' }, h('h2', null, t('工作区消息量', 'Workspace volume')),
+                    h('button', { type: 'button', className: 'dshcw-dash-link', onClick: props.onWorkspaces }, t('查看 →', 'View →'))),
+                  workspaces.length === 0
+                    ? h('div', { className: 'dshcw-dash-nodata' }, t('还没有工作区', 'No workspaces'))
+                    : workspaces.slice(0, 4).map(function (workspace) {
+                        const max = Math.max(1, ...workspaces.map(function (item) { return item.unread || 0 }))
+                        return h('div', { key: workspace.path, className: 'dshcw-dash-bar-row' },
+                          h('span', { className: 'dshcw-truncate' }, workspace.title || basename(workspace.path) || workspace.path),
+                          h('span', { className: 'dshcw-dash-mini-bar' }, h('i', { style: { width: Math.max(2, (workspace.unread || 0) / max * 100) + '%' } })),
+                          h('strong', null, String(workspace.unread || 0)))
+                      })),
+                h('section', { className: 'dshcw-dash-card' },
+                  h('div', { className: 'dshcw-dash-card-head' }, h('h2', null, t('消息量', 'Messages')),
+                    h('span', null, t('总 ', 'total ') + (stats ? stats.total : 0))),
+                  h('div', { className: 'dshcw-dash-stats' },
+                    h('div', null, h('strong', null, String(stats ? stats.mailbox : 0)), h('span', null, t('信箱', 'Mailbox'))),
+                    h('div', null, h('strong', null, String(stats ? stats.failed : 0)), h('span', null, t('失败', 'Failed'))),
+                    h('div', null, h('strong', null, String(stats ? stats.queued : 0)), h('span', null, t('排队', 'Queued'))),
+                    h('div', null, h('strong', null, String(stats ? stats.none : 0)), h('span', null, t('无目标', 'None')))))),
+              h('section', { className: 'dshcw-dash-card dshcw-dash-table-card' },
+                h('div', { className: 'dshcw-dash-card-head' },
+                  h('h2', null, t('最近消息', 'Recent messages')),
+                  h('div', { className: 'dshcw-dash-table-actions' },
+                    h('button', { type: 'button', className: 'dshcw-dash-link', onClick: props.onViewAll }, t('全部消息 →', 'All messages →')),
+                    rows < 20 && tableMessages.length > rows
+                      ? h('button', { type: 'button', className: 'dshcw-dash-link', onClick: function () { setRows(rows >= 12 ? 20 : 12) } }, t('查看更多', 'Show more'))
+                      : null)),
+                h('div', { className: 'dshcw-dash-table', role: 'table' },
+                  h('div', { className: 'dshcw-dash-tr dshcw-dash-th', role: 'row' },
+                    h('span', null, t('时间', 'Time')), h('span', null, t('来源', 'From')), h('span', null, t('主题', 'Subject')), h('span', null, t('状态', 'Status')), h('span', null, '')),
+                  visibleRows.length === 0
+                    ? h('div', { className: 'dshcw-dash-nodata' }, t('没有匹配的消息', 'No matching messages'))
+                    : visibleRows.map(function (mail) {
+                        const delivery = mail.delivery && typeof mail.delivery === 'object' ? mail.delivery : null
+                        const retry = canRetryDelivery(delivery)
+                        return h('div', { key: mail.id, className: 'dshcw-dash-tr', role: 'row' },
+                          h('span', { className: 'dshcw-dash-muted' }, relativeTime(mail.createdAt, now, t)),
+                          h('span', { className: 'dshcw-truncate' }, compactParty(mail.from, t)),
+                          h('button', { type: 'button', className: 'dshcw-dash-subject', onClick: function () { props.onOpen(mail) } }, subjectText(mail, t)),
+                          h('span', { className: 'dshcw-dash-status' }, h(Badge, { tone: deliveryChipTone(delivery) }, deliveryChipLabel(delivery, t))),
+                          h('span', null, retry
+                            ? h('button', { type: 'button', className: 'dshcw-dash-retry', disabled: props.retryingId === mail.id, onClick: function () { props.onRetry(mail) } }, t('重试', 'Retry'))
+                            : null))
+                      })))
+          )
+    }
+
     function ManagementPage(props) {
       const ctx = props.ctx
       const runtime = props.runtime
@@ -1210,6 +1493,8 @@ window.__ModuleLoader__.load({
       const [selectedSessionId, setSelectedSessionId] = React.useState(null)
       const [menuOpen, setMenuOpen] = React.useState(false)
       const [secondary, setSecondary] = React.useState(null)
+      const [secondaryFrom, setSecondaryFrom] = React.useState('messages')
+      const [surface, setSurface] = React.useState('dashboard')
       const [expanded, setExpanded] = React.useState({})
       const [detail, setDetail] = React.useState(null)
       const [editing, setEditing] = React.useState(null)
@@ -1548,6 +1833,7 @@ window.__ModuleLoader__.load({
 
       function openSecondary(next) {
         setMenuOpen(false)
+        setSecondaryFrom(surface)
         setSecondary(next)
         setDetail(null)
         setCompose(null)
@@ -1555,6 +1841,7 @@ window.__ModuleLoader__.load({
 
       function closeSecondary() {
         setSecondary(null)
+        setSurface(secondaryFrom || 'messages')
         if (typeof requestAnimationFrame === 'function') {
           requestAnimationFrame(function () {
             if (menuButtonRef.current) menuButtonRef.current.focus()
@@ -2082,6 +2369,47 @@ window.__ModuleLoader__.load({
       }
 
       const showSplitDetail = !!detail && split && !narrow && !groupEditor && !compose && !editing
+      const showDashboard = surface === 'dashboard' && !secondary && !detail && !groupEditor && !compose && !editing
+
+      if (showDashboard) {
+        return h('div', {
+          className: 'dshcw-root dshcw-dash-root',
+          style: {
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+            boxSizing: 'border-box',
+            paddingTop: 'calc(14px + var(--dsh-frame-top-clearance, 0px))',
+            paddingLeft: 'max(14px, var(--dsh-frame-leading-clearance, 0px))',
+            paddingRight: 14,
+            paddingBottom: 14,
+            color: 'var(--dsw-alias-label-primary)',
+          },
+        },
+          h(Styles),
+          error ? h(AlertBanner, { onDismiss: function () { setError('') }, dismissLabel: t('关闭', 'Dismiss') }, error) : null,
+          notice ? h(AlertBanner, { tone: 'success', role: 'status', onDismiss: function () { setNotice('') }, dismissLabel: t('关闭', 'Dismiss') }, notice) : null,
+          h(DashboardView, {
+            t: t,
+            data: data,
+            stats: data && data.stats ? data.stats : null,
+            messages: rawMessages,
+            groups: groups,
+            workspaces: workspaces,
+            now: now,
+            retryingId: retryingId,
+            onRefresh: refreshNow,
+            onNew: startCompose,
+            onViewAll: function () { setSurface('messages'); setFilter('all') },
+            onGroups: function () { openSecondary('groups') },
+            onWorkspaces: function () { openSecondary('workspaces') },
+            onGroup: function (group) { selectGroup(group); setSurface('messages') },
+            onOpen: openMessage,
+            onRetry: retryMessage,
+          })
+        )
+      }
 
       return h('div', {
         className: 'dshcw-root',
@@ -2111,6 +2439,7 @@ window.__ModuleLoader__.load({
             style: { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 },
           },
             h('div', { style: { minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 8 } },
+              h(Button, { variant: 'ghost', onClick: function () { setSurface('dashboard') }, style: { minHeight: 28, padding: '0 6px', fontSize: 11 } }, '← ' + t('仪表盘', 'Dashboard')),
               h('h1', {
                 style: {
                   margin: 0,
@@ -5230,7 +5559,7 @@ window.__ModuleLoader__.load({
       apply: apply,
       // Exposed for the no-browser render smoke test; the plugin loader ignores
       // unknown properties and this does not add a slot or a network call.
-      __test: { ManagementPage: ManagementPage },
+      __test: { ManagementPage: ManagementPage, DashboardView: DashboardView },
     }
   },
 })

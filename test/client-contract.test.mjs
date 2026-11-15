@@ -117,9 +117,78 @@ describe('client P0 contracts', () => {
     assert.match(client, /position: 'fixed'/)
   })
 
+  it('renders DashboardView once with fake React', () => {
+    const hooks = []
+    let cursor = 0
+    const fakeReact = {
+      createElement(type, props, ...children) { return { type, props: Object.assign({}, props || {}, { children }) } },
+      useState(init) {
+        const index = cursor++
+        if (!(index in hooks)) hooks[index] = typeof init === 'function' ? init() : init
+        return [hooks[index], function () {}]
+      },
+      useRef(init) { const index = cursor++; if (!(index in hooks)) hooks[index] = { current: init }; return hooks[index] },
+      useMemo(fn) { return fn() },
+      useCallback(fn) { return fn },
+      useEffect() {},
+      useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot() },
+    }
+    let plugin
+    const windowObject = {
+      innerWidth: 1280,
+      addEventListener() {},
+      removeEventListener() {},
+      __ModuleLoader__: { load: entry => { plugin = entry.factory(() => fakeReact) } },
+    }
+    const evaluate = new Function('window', 'document', 'console', 'setTimeout', 'clearTimeout', client + '\n//# sourceURL=client.js')
+    evaluate(windowObject, undefined, console, setTimeout, clearTimeout)
+    const stats = {
+      scope: 'viewer',
+      total: 5,
+      unread: 2,
+      sent: 1,
+      groups: 1,
+      workspaces: 1,
+      delivered: 2,
+      queued: 1,
+      failed: 1,
+      mailbox: 1,
+      none: 0,
+      days: Array.from({ length: 7 }, (_, index) => ({
+        date: '2026-11-' + String(9 + index).padStart(2, '0'),
+        sent: index === 6 ? 1 : 0,
+        received: index === 6 ? 2 : 0,
+        delivered: index === 6 ? 2 : 0,
+        queued: index === 6 ? 1 : 0,
+        failed: index === 6 ? 1 : 0,
+        mailbox: index === 6 ? 1 : 0,
+        none: 0,
+      })),
+    }
+    const tree = plugin.__test.DashboardView({
+      t: (zh, en) => en,
+      data: { viewer: { workspaceTitle: 'Test workspace' } },
+      stats,
+      messages: [],
+      groups: [],
+      workspaces: [],
+      now: Date.now(),
+      retryingId: '',
+      onRefresh() {},
+      onNew() {},
+      onViewAll() {},
+      onGroups() {},
+      onWorkspaces() {},
+      onGroup() {},
+      onOpen() {},
+      onRetry() {},
+    })
+    assert.ok(tree && typeof tree === 'object')
+  })
+
   it('keeps the U4 menu order and secondary pages', () => {
-    const menuStart = client.indexOf("{ key: 'sent'")
-    const menuEnd = client.indexOf("{ key: 'settings'")
+    const menuStart = client.indexOf("label: t('已发送', 'Sent')")
+    const menuEnd = client.indexOf("label: t('设置', 'Settings')")
     assert.ok(menuStart >= 0 && menuEnd > menuStart)
     const menu = client.slice(menuStart, menuEnd)
     const order = ["t('已发送', 'Sent')", "t('群组…', 'Groups…')", "t('工作区', 'Workspaces')", "t('交流图', 'Graph')", "t('全部已读', 'Mark all read')", "t('刷新', 'Refresh')"]
