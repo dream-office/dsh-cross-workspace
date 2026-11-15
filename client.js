@@ -383,6 +383,19 @@ window.__ModuleLoader__.load({
       return delivery && Number.isInteger(delivery.attempts) && delivery.attempts >= 0 ? delivery.attempts : 0
     }
 
+    /** U1 list/detail status chip: delivered / queued / not delivered. */
+    function deliveryChipLabel(delivery, t) {
+      if (delivery && delivery.mode === 'wake' && delivery.delivered === true) return t('已投递', 'Delivered')
+      if (delivery && delivery.mode === 'queued') return t('排队 · 目标运行中', 'Queued · target busy')
+      return t('未投递', 'Not delivered')
+    }
+
+    function deliveryChipTone(delivery) {
+      if (delivery && delivery.mode === 'wake' && delivery.delivered === true) return 'success'
+      if (delivery && delivery.mode === 'failed') return 'error'
+      return 'plain'
+    }
+
     function canRetryDelivery(delivery) {
       if (!delivery || delivery.mode === 'wake' || delivery.mode === 'queued') return false
       return deliveryAttempts(delivery) < MAX_DELIVERY_ATTEMPTS
@@ -716,6 +729,8 @@ window.__ModuleLoader__.load({
 .dshcw-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
 .dshcw-tab:hover{color:var(--dsw-alias-label-primary)}
 .dshcw-tab:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+.dshcw-chip:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.dshcw-chiprow::-webkit-scrollbar{display:none}
 .dshcw-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .dshcw-btn-outline:not(:disabled):hover{background:var(--dsw-alias-interactive-bg-hover)}
 .dshcw-btn-ghost:not(:disabled):hover{background:var(--dsw-alias-interactive-bg-hover)}
@@ -1128,10 +1143,11 @@ window.__ModuleLoader__.load({
       const [refreshing, setRefreshing] = React.useState(false)
       const [error, setError] = React.useState('')
       const [notice, setNotice] = React.useState('')
-      const [filter, setFilter] = React.useState('inbox')
+      const [filter, setFilter] = React.useState('me')
       const [workspacePathFilter, setWorkspacePathFilter] = React.useState(null)
       const [groupIdFilter, setGroupIdFilter] = React.useState(null)
       const [selectedSessionId, setSelectedSessionId] = React.useState(null)
+      const [menuOpen, setMenuOpen] = React.useState(false)
       const [expanded, setExpanded] = React.useState({})
       const [detail, setDetail] = React.useState(null)
       const [editing, setEditing] = React.useState(null)
@@ -1152,11 +1168,33 @@ window.__ModuleLoader__.load({
       const lastStateAtRef = React.useRef(0)
       const uiBusyRef = React.useRef(false)
       const mountedRef = React.useRef(true)
+      const menuButtonRef = React.useRef(null)
+      const menuRef = React.useRef(null)
 
       React.useEffect(function () {
         mountedRef.current = true
         return function () { mountedRef.current = false }
       }, [])
+
+      React.useEffect(function () {
+        if (!menuOpen) return undefined
+        function closeOnEscape(event) {
+          if (event.key !== 'Escape') return
+          setMenuOpen(false)
+          if (menuButtonRef.current) menuButtonRef.current.focus()
+        }
+        function closeOnOutside(event) {
+          if (menuRef.current && menuRef.current.contains(event.target)) return
+          if (menuButtonRef.current && menuButtonRef.current.contains(event.target)) return
+          setMenuOpen(false)
+        }
+        document.addEventListener('keydown', closeOnEscape)
+        document.addEventListener('mousedown', closeOnOutside)
+        return function () {
+          document.removeEventListener('keydown', closeOnEscape)
+          document.removeEventListener('mousedown', closeOnOutside)
+        }
+      }, [menuOpen])
 
       React.useEffect(function () {
         uiBusyRef.current = !!(compose || groupEditor || detail)
@@ -1169,7 +1207,7 @@ window.__ModuleLoader__.load({
         setCompose(null)
       }, [mySessionId])
 
-      const requestFilter = filter === 'inbox' ? 'inbox' : 'all'
+      const requestFilter = filter === 'me' ? 'inbox' : 'all'
 
       const load = React.useCallback(async function (options) {
         const opts = options || {}
@@ -1290,15 +1328,37 @@ window.__ModuleLoader__.load({
       const maxGroupMembers = typeof settings.maxGroupMembers === 'number' && settings.maxGroupMembers > 0 ? settings.maxGroupMembers : 32
       const sessionDirectory = React.useMemo(function () { return buildSessionDirectory(data) }, [data])
       const activeGroup = groupIdFilter ? groups.find(function (group) { return group && group.id === groupIdFilter }) || null : null
+      const chipGroup = activeGroup || groups[0] || null
+      const chipItems = [
+        { id: 'all', label: t('全部', 'All') },
+        { id: 'unread', label: t('未读', 'Unread') },
+        { id: 'me', label: t('发给我', 'To me') },
+        { id: 'broadcast', label: t('广播', 'Broadcast') },
+        { id: 'group', label: chipGroup ? t('群组 · ', 'Group · ') + clipText(chipGroup.name, 12) : t('群组 · 最近', 'Group · recent'), disabled: !chipGroup },
+      ]
 
       const messages = React.useMemo(function () {
-        if (filter !== 'sent') return rawMessages
-        const sender = mySessionId || (data && data.viewer && typeof data.viewer.sessionId === 'string' ? data.viewer.sessionId : '')
-        if (!sender) return []
-        return rawMessages.filter(function (mail) {
-          return !!mail && !!mail.from && mail.from.sessionId === sender
-        })
-      }, [filter, rawMessages, mySessionId, data])
+        if (filter === 'sent') {
+          const sender = mySessionId || (data && data.viewer && typeof data.viewer.sessionId === 'string' ? data.viewer.sessionId : '')
+          if (!sender) return []
+          return rawMessages.filter(function (mail) {
+            return !!mail && !!mail.from && mail.from.sessionId === sender
+          })
+        }
+        if (filter === 'unread') return rawMessages.filter(function (mail) { return mail && mail.read !== true })
+        if (filter === 'broadcast') {
+          return rawMessages.filter(function (mail) {
+            const to = mail && mail.to ? mail.to : {}
+            return typeof to.workspacePath === 'string' && typeof to.sessionId !== 'string' && typeof to.groupId !== 'string'
+          })
+        }
+        if (filter === 'group') {
+          return groupIdFilter
+            ? rawMessages.filter(function (mail) { return mail && mail.to && mail.to.groupId === groupIdFilter })
+            : []
+        }
+        return rawMessages
+      }, [filter, rawMessages, mySessionId, data, groupIdFilter])
 
       React.useEffect(function () {
         if (!data || expandedInitRef.current) return
@@ -1351,6 +1411,7 @@ window.__ModuleLoader__.load({
         setSelectedSessionId(null)
         setDetail(null)
         setCompose(null)
+        setFilter('all')
       }
 
       function selectWorkspace(workspace) {
@@ -1359,6 +1420,7 @@ window.__ModuleLoader__.load({
         setGroupIdFilter(null)
         setSelectedSessionId(null)
         setDetail(null)
+        setFilter('me')
         setExpanded(function (previous) {
           if (previous[workspace.path]) return previous
           const next = Object.assign({}, previous)
@@ -1373,6 +1435,7 @@ window.__ModuleLoader__.load({
         setGroupIdFilter(null)
         setSelectedSessionId(typeof session.sessionId === 'string' ? session.sessionId : null)
         setDetail(null)
+        setFilter('me')
       }
 
       function selectGroup(group) {
@@ -1381,9 +1444,8 @@ window.__ModuleLoader__.load({
         setWorkspacePathFilter(null)
         setSelectedSessionId(null)
         setDetail(null)
-        // Group mail is not part of a session inbox; without this the state
-        // request stays on `inbox` and returns an empty list for a manager view.
-        setFilter('all')
+        // Group mail is not part of a session inbox; switch to the group chip.
+        setFilter('group')
       }
 
       function startCreateGroup() {
@@ -1415,7 +1477,7 @@ window.__ModuleLoader__.load({
             setGroupIdFilter(group.id)
             setWorkspacePathFilter(null)
             setSelectedSessionId(null)
-            setFilter('all')
+            setFilter('group')
           }
         }
         void load({ quiet: true, force: true })
@@ -1612,9 +1674,6 @@ window.__ModuleLoader__.load({
         return sum + (workspace && typeof workspace.unread === 'number' ? workspace.unread : 0)
       }, 0)
       const displayUnread = hasViewer ? unreadTotal : workspaceUnreadTotal
-      const viewerLabel = mySessionId
-        ? t('查看者会话：', 'Viewer session: ') + mySessionId
-        : t('管理视角：未选中会话，未读数只包含工作区广播', 'Management view: no session selected; unread counts cover workspace broadcasts only')
 
       const gridStyle = narrow
         ? {
@@ -1708,16 +1767,6 @@ window.__ModuleLoader__.load({
         })
       } else {
         rightContent = h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 } },
-          h(FilterTabs, {
-            t: t,
-            value: filter,
-            count: messages.length,
-            onChange: function (next) {
-              if (next === filter) return
-              setFilter(next)
-              setDetail(null)
-            },
-          }),
           (workspacePathFilter || groupIdFilter)
             ? h('div', {
                 style: {
@@ -1766,16 +1815,22 @@ window.__ModuleLoader__.load({
                 : messages.length === 0
                   ? h(EmptyState, {
                       key: 'empty',
-                      title: filter === 'inbox'
+                      title: filter === 'me'
                         ? t('收件箱是空的', 'Your inbox is empty')
                         : filter === 'sent'
                           ? t('还没有已发送的消息', 'Nothing sent yet')
-                          : t('还没有任何消息', 'No messages yet'),
+                          : filter === 'unread'
+                            ? t('没有未读消息', 'No unread messages')
+                            : filter === 'broadcast'
+                              ? t('没有广播消息', 'No broadcast messages')
+                              : filter === 'group'
+                                ? t('这个群组还没有消息', 'No messages in this group yet')
+                                : t('还没有任何消息', 'No messages yet'),
                       description: filter === 'sent'
                         ? (mySessionId
                             ? t('在这个会话里发出的消息会出现在这里。', 'Messages sent from the current session appear here.')
                             : t('未选中会话时无法判断“已发送”，请先打开一个会话。', 'Without a selected session the sent view has no sender; open a session first.'))
-                        : filter === 'inbox' && !hasViewer
+                        : filter === 'me' && !hasViewer
                           ? t('未选中会话时收件箱为空；切换到「全部」可以按管理视角浏览所有消息。', 'With no session selected the inbox is empty; switch to “All” to browse every message from a management view.')
                           : t('让 Agent 使用 mail_send 工具，或点击“新消息”发起一条跨工作区消息。', 'Ask an agent to use the mail_send tool, or click “New message” to start one.'),
                     })
@@ -1813,50 +1868,130 @@ window.__ModuleLoader__.load({
         h(Styles, { key: 'styles' }),
         h('header', {
           style: {
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: 10,
+            display: 'grid',
+            gap: 8,
             flex: 'none',
             paddingBottom: 10,
           },
         },
-          h('div', { style: { minWidth: 0, flex: '1 1 260px' } },
-            h('h1', {
-              style: {
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: 18,
-                lineHeight: '24px',
-                fontWeight: 600,
-                color: 'var(--dsw-alias-label-primary)',
-              },
-            },
-              h('span', null, t('跨工作区信使', 'Cross-workspace courier')),
+          h('div', {
+            style: { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 },
+          },
+            h('div', { style: { minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 8 } },
+              h('h1', {
+                style: {
+                  margin: 0,
+                  fontSize: 16,
+                  lineHeight: '22px',
+                  fontWeight: 600,
+                  color: 'var(--dsw-alias-label-primary)',
+                  whiteSpace: 'nowrap',
+                },
+              }, t('收件箱', 'Inbox')),
               h(Badge, { tone: 'brand', title: t('未读总数', 'Total unread') }, String(displayUnread))
             ),
-            h('div', {
-              style: {
-                marginTop: 2,
-                fontSize: 11,
-                lineHeight: '16px',
-                color: 'var(--dsw-alias-label-tertiary)',
-                overflowWrap: 'anywhere',
-              },
-            }, viewerLabel)
+            h('div', { style: { position: 'relative', flex: 'none' } },
+              h('button', {
+                type: 'button',
+                ref: menuButtonRef,
+                className: 'dshcw-iconbtn',
+                'aria-label': t('更多', 'More'),
+                'aria-haspopup': 'menu',
+                'aria-expanded': menuOpen,
+                title: t('更多', 'More'),
+                onClick: function () { setMenuOpen(function (open) { return !open }) },
+                style: {
+                  width: 32,
+                  height: 32,
+                  padding: 0,
+                  border: '.5px solid var(--dsw-alias-border-l1)',
+                  borderRadius: 10,
+                  background: 'transparent',
+                  color: 'var(--dsw-alias-label-secondary)',
+                  font: 'inherit',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                },
+              }, '⋯'),
+              menuOpen
+                ? h('div', {
+                    ref: menuRef,
+                    role: 'menu',
+                    'aria-label': t('更多操作', 'More actions'),
+                    style: {
+                      position: 'absolute',
+                      top: 36,
+                      right: 0,
+                      zIndex: 20,
+                      minWidth: 160,
+                      padding: 4,
+                      display: 'grid',
+                      gap: 1,
+                      background: 'var(--dsw-alias-bg-layer-2)',
+                      border: '.5px solid var(--dsw-alias-border-l1)',
+                      borderRadius: 10,
+                    },
+                  },
+                    [
+                      { key: 'sent', label: t('已发送', 'Sent'), run: function () { setFilter('sent') } },
+                      { key: 'graph', label: t('交流图', 'Graph'), run: function () { setFilter('graph') } },
+                      { key: 'group', label: t('新建群组', 'New group'), run: startCreateGroup },
+                      { key: 'read', label: t('全部已读', 'Mark all read'), run: markAllRead },
+                      { key: 'refresh', label: t('刷新', 'Refresh'), run: refreshNow },
+                    ].map(function (item) {
+                      return h('button', {
+                        key: item.key,
+                        type: 'button',
+                        role: 'menuitem',
+                        className: 'dshcw-btn',
+                        onClick: function () {
+                          setMenuOpen(false)
+                          item.run()
+                        },
+                        style: {
+                          minHeight: 32,
+                          padding: '0 10px',
+                          border: 0,
+                          borderRadius: 7,
+                          background: 'transparent',
+                          color: 'var(--dsw-alias-label-primary)',
+                          font: 'inherit',
+                          fontSize: 12,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                        },
+                      }, item.label)
+                    })
+                  )
+                : null
+            ),
+            h(Button, {
+              variant: 'primary',
+              onClick: startCompose,
+              disabled: !data || (workspaces.length === 0 && groups.length === 0),
+              style: { minHeight: 32, padding: '0 12px' },
+            }, t('新消息', 'New message'))
           ),
-          h('div', { style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 } },
-            lastRefreshAt
-              ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-tertiary)' } }, t('最后刷新 ', 'Updated ') + formatClock(lastRefreshAt))
-              : null,
-            refreshing ? h(Spinner, { size: 14 }) : null,
-            h(Button, { variant: 'outline', onClick: refreshNow, disabled: loading || refreshing }, t('刷新', 'Refresh')),
-            h(Button, { variant: 'outline', onClick: markAllRead, disabled: markingAll || !data }, markingAll ? t('处理中…', 'Marking…') : t('全部已读', 'Mark all read')),
-            h(Button, { variant: 'outline', onClick: startCreateGroup, disabled: !data }, t('新建群组', 'New group')),
-            h(Button, { variant: 'primary', onClick: startCompose, disabled: !data || (workspaces.length === 0 && groups.length === 0) }, t('新消息', 'New message'))
-          )
+          h(FilterChips, {
+            t: t,
+            value: filter,
+            items: chipItems,
+            onChange: function (next) {
+              if (next === filter) return
+              if (next === 'all' || next === 'broadcast') {
+                setGroupIdFilter(null)
+                setWorkspacePathFilter(null)
+              } else if (next === 'me') {
+                setGroupIdFilter(null)
+              } else if (next === 'group' && chipGroup) {
+                setGroupIdFilter(chipGroup.id)
+                setWorkspacePathFilter(null)
+                setSelectedSessionId(null)
+              }
+              setFilter(next)
+              setDetail(null)
+            },
+          })
         ),
         error ? h(AlertBanner, { onDismiss: function () { setError('') }, dismissLabel: t('关闭', 'Dismiss') }, error) : null,
         notice
@@ -2166,24 +2301,21 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function FilterTabs(props) {
+    function FilterChips(props) {
       const t = props.t
-      const items = [
-        { id: 'inbox', label: t('收件箱', 'Inbox') },
-        { id: 'all', label: t('全部', 'All') },
-        { id: 'sent', label: t('已发送', 'Sent') },
-        { id: 'graph', label: t('交流图', 'Graph') },
-      ]
+      const items = Array.isArray(props.items) ? props.items : []
       return h('div', {
         role: 'tablist',
+        className: 'dshcw-chiprow',
         'aria-label': t('消息筛选', 'Message filter'),
         style: {
           display: 'flex',
           alignItems: 'center',
-          gap: 4,
-          padding: '8px 10px',
+          gap: 6,
+          padding: 0,
           flex: 'none',
-          borderBottom: '.5px solid var(--dsw-alias-border-l1)',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
         },
       },
         items.map(function (item) {
@@ -2193,24 +2325,25 @@ window.__ModuleLoader__.load({
             type: 'button',
             role: 'tab',
             'aria-selected': active,
-            className: 'dshcw-tab',
-            onClick: function () { props.onChange(item.id) },
+            className: 'dshcw-chip',
+            disabled: item.disabled === true,
+            onClick: function () { if (!item.disabled) props.onChange(item.id) },
             style: {
               minHeight: 28,
-              padding: '0 10px',
-              border: '1px solid ' + (active ? 'var(--dsw-alias-border-l2)' : 'transparent'),
-              borderRadius: '8px',
+              flex: '0 0 auto',
+              padding: '0 12px',
+              border: '1px solid ' + (active ? 'var(--dsw-alias-brand-primary)' : 'var(--dsw-alias-border-l1)'),
+              borderRadius: 999,
               background: active ? 'var(--dsw-alias-bg-layer-2)' : 'transparent',
-              color: active ? 'var(--dsw-alias-label-primary)' : 'var(--dsw-alias-label-secondary)',
+              color: active ? 'var(--dsw-alias-label-primary)' : (item.disabled ? 'var(--dsw-alias-label-tertiary)' : 'var(--dsw-alias-label-secondary)'),
               font: 'inherit',
-              fontSize: 13,
-              cursor: 'pointer',
+              fontSize: 12,
+              lineHeight: '26px',
+              whiteSpace: 'nowrap',
+              cursor: item.disabled ? 'default' : 'pointer',
             },
           }, item.label)
-        }),
-        h('span', {
-          style: { marginLeft: 'auto', fontSize: 11, color: 'var(--dsw-alias-label-tertiary)' },
-        }, props.count + t(' 条', ' items'))
+        })
       )
     }
 
@@ -2957,9 +3090,7 @@ window.__ModuleLoader__.load({
             isGroupMail(mail)
               ? h(Badge, { tone: 'idle', title: groupLabelOf(mail.to, t) }, t('群组', 'Group') + (mail.to && mail.to.groupName ? ' · ' + clipText(mail.to.groupName, 16) : ''))
               : null,
-            h(Badge, {
-              tone: delivery && delivery.mode === 'wake' ? 'success' : (delivery && delivery.mode === 'failed' ? 'error' : 'plain'),
-            }, deliveryBadgeLabel(delivery, t)),
+            h(Badge, { tone: deliveryChipTone(delivery) }, deliveryChipLabel(delivery, t)),
             files.length ? h(Badge, null, t('附件 ', 'Files ') + files.length) : null,
             hasData ? h(Badge, null, 'JSON') : null,
             mail.hop > 0 ? h(Badge, { tone: 'idle' }, '#' + mail.hop) : null,
@@ -3172,9 +3303,7 @@ window.__ModuleLoader__.load({
           }, subjectText(mail, t)),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center', marginBottom: 10 } },
             isGroup ? h(Badge, { tone: 'idle', title: groupLabelOf(mail.to, t) }, t('群组消息', 'Group message')) : null,
-            h(Badge, {
-              tone: delivery && delivery.mode === 'wake' ? 'success' : (delivery && delivery.mode === 'failed' ? 'error' : 'plain'),
-            }, deliveryBadgeLabel(delivery, t)),
+            h(Badge, { tone: deliveryChipTone(delivery) }, deliveryChipLabel(delivery, t)),
             mail.hop > 0 ? h(Badge, { tone: 'idle' }, t('跳数 ', 'Hop ') + mail.hop) : null,
             files.length ? h(Badge, null, t('附件 ', 'Files ') + files.length) : null,
             hasData ? h(Badge, null, 'JSON') : null

@@ -21,7 +21,14 @@ describe('client P0 contracts', () => {
   it('selectGroup switches the list away from the session inbox', () => {
     const body = functionBody('selectGroup')
     assert.match(body, /setGroupIdFilter\(group\.id\)/)
-    assert.match(body, /setFilter\('all'\)/)
+    assert.match(body, /setFilter\('group'\)/)
+  })
+
+  it('renders the U1 chip set instead of the old four tabs', () => {
+    assert.match(client, /function FilterChips\(/)
+    assert.match(client, /id: 'unread'/)
+    assert.match(client, /id: 'broadcast'/)
+    assert.match(client, /id: 'group'/)
   })
 
   it('clear-read is described as fully-read-only', () => {
