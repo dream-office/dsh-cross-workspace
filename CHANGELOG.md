@@ -2,18 +2,19 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
-## 2026-11-15 · v1.0 rewrite skeleton（预览，不是发布）
+## 2026-11-15 · 1.0.0（重做 v1.0）
 
-> 从 `0aa8a72` 起的 `rewrite/v1.0`；新 client 单 view，Host/store/tools 契约不动。
-> 当前只是可安装预览骨架，不是完整 v1 验收。
+> 从 `0aa8a72` / `rewrite/v1.0` 交付的新 client；Host 工具、actions、store v2、投递语义不变。
+> 默认深色 + 浅色切换；单一 `view`。
 
 - 新增 `client.v1.js`：单一顶层 `view`（dashboard/messages/groups/workspaces/graph/settings/compose/detail/groupEditor），
-  `navigate/back`，显式按钮 handler；build stamp `1.0.0-rewrite 6de2823`。
+  `navigate/back`，显式按钮 handler；build stamp `1.0.0-rewrite 7d24f28`。
 - 深/浅色主题；KPI/7天/环形/三卡/消息表；消息、群组、工作区、交流图、设置、详情、发送抽屉、群组编辑。
 - `package.json` `exports["./client"]` 指向 `client.v1.js`；旧 `client.js` 保留作回滚/旧契约测试。
 - 测试：新增 `test/v1-client.test.mjs`（App 渲染、8 个 view、Dashboard KPI/表格、消息/详情、群组/工作区、交流图/设置、顶栏按钮、compose/群组编辑 payload、build stamp、无空 handler）；
   **225 tests / 60 suites 全绿**。旧 client 契约测试仍保留。
-- 未 push/Release；未做真实浏览器截图。
+- 实机证据：1440 深色/浅色、390 浅色、工作区、发送抽屉通过；**390/320 深色截图实际截到 DSH 首页，不能作为插件通过证据**，待补。
+- 未 push/Release。
 
 ## 2026-11-15 · v4 stats（开发中，未定版本）
 
