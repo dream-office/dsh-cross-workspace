@@ -11,7 +11,7 @@
 
 ## Verification
 
-- [ ] `npm test` passes (191 tests / 57 suites expected)
+- [ ] `npm test` passes (228 tests / 60 suites expected)
 - [ ] Tests run twice
 - [ ] `node --check` passes for all changed JS files
 - [ ] Manual smoke test (if UI/Host behavior changed)

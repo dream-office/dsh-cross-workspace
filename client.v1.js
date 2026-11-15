@@ -13,7 +13,7 @@ window.__ModuleLoader__.load({
     const API_HEADERS = { 'content-type': 'application/json', 'x-dsh-cross-workspace': '1' }
     const LIMIT = 300
     const POLL_MS = 4000
-    const BUILD_STAMP = '1.0.0-rewrite 1789eec'
+    const BUILD_STAMP = '1.0.0-rewrite 9e35c10'
 
     async function apiCall(action, payload, signal) {
       if (typeof fetch !== 'function') throw new Error('fetch is unavailable in this shell')

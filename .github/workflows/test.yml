@@ -30,6 +30,7 @@ jobs:
         run: |
           node --check index.js
           node --check client.v1.js
+          node --check client.js
           node --check lib/store.js
           node --check lib/resolve.js
           node --check lib/format.js

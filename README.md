@@ -11,7 +11,7 @@
 - 版本：`1.0.0`（`package.json` / API 契约 / CHANGELOG 同步）
 - 文档最后更新：2026-11-15
 - 测试：**228 tests / 60 suites，全绿**（数字以当前仓库为准，改测试后需同步）
-- 面板 build stamp：`1.0.0-rewrite 1789eec`（最后一次 client 代码提交，**不是当前 HEAD**；
+- 面板 build stamp：`1.0.0-rewrite 9e35c10`（最后一次 client 代码提交，**不是当前 HEAD**；
   后续 stamp/文档/测试提交不改变它）
 - 运行位置：本机同一个 DSH Host 进程内；没有出站网络请求，消息与附件不上传
 
