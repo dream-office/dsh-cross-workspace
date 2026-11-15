@@ -1914,6 +1914,10 @@ describe('manual groups — send and state', () => {
     const managementFiltered = await harness.call('state', { filter: 'all', groupIdFilter: other.id })
     assert.equal(managementFiltered.body.value.messages.length, 1)
     assert.equal(managementFiltered.body.value.messages[0].to.groupId, other.id)
+    // A manager has no session inbox. The client must switch to `all` when a
+    // group is selected; the server intentionally does not silently change it.
+    const managementInbox = await harness.call('state', { groupIdFilter: other.id })
+    assert.equal(managementInbox.body.value.messages.length, 0)
   })
 
   it('wakes idle members and records per-member delivery results', async () => {

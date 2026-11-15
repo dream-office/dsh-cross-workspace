@@ -367,7 +367,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs
 ```
 
-基线：**191 tests / 57 suites，191 pass / 0 fail**，连跑两次一致。
+基线：**193 tests / 58 suites，193 pass / 0 fail**，连跑两次一致。
 
 ---
 

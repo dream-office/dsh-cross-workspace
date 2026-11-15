@@ -602,17 +602,32 @@ describe('retention and clearing', () => {
 
     const readMessage = await store.addMessage(input({
       body: 'read me',
+      to: { sessionId: 's-reader' },
       attachmentSources: [{ path: attachment }],
     }))
     const keptMessage = await store.addMessage(input({ body: 'keep me' }))
     const another = await store.addMessage(input({ body: 'keep me too' }))
-    store.markRead(readMessage.id, 's:reader')
+    const group = await store.createGroup({ name: 'clear-read group', sessionIds: ['s-g1', 's-g2'] })
+    const groupMessage = await store.addMessage(input({
+      body: 'partially read group mail',
+      to: { groupId: group.id, memberSessionIds: ['s-g1', 's-g2'] },
+    }))
+    store.markRead(readMessage.id, 's:s-reader')
+    store.markRead(groupMessage.id, 's:s-g1')
     await store.flush()
 
+    assert.equal(store.isFullyRead(store.getMessage(readMessage.id)), true)
+    assert.equal(store.isFullyRead(store.getMessage(groupMessage.id)), false, 'one group member has not read it')
     assert.deepEqual(await store.clear('read'), { removed: 1 })
     assert.equal(store.getMessage(readMessage.id), undefined)
     assert.equal(existsSync(join(store.attachmentsDir, readMessage.id)), false)
-    assert.deepEqual(store.listMessages().map(message => message.id), [another.id, keptMessage.id])
+    assert.ok(store.getMessage(groupMessage.id), 'partially read group message must stay')
+    assert.deepEqual(store.listMessages().map(message => message.id), [groupMessage.id, another.id, keptMessage.id])
+
+    store.markRead(groupMessage.id, 's:s-g2')
+    assert.equal(store.isFullyRead(store.getMessage(groupMessage.id)), true, 'now every member has read it')
+    assert.deepEqual(await store.clear('read'), { removed: 1 })
+    assert.equal(store.getMessage(groupMessage.id), undefined)
 
     assert.deepEqual(await store.clear('all'), { removed: 2 })
     assert.deepEqual(store.listMessages(), [])

@@ -1366,6 +1366,9 @@ window.__ModuleLoader__.load({
         setWorkspacePathFilter(null)
         setSelectedSessionId(null)
         setDetail(null)
+        // Group mail is not part of a session inbox; without this the state
+        // request stays on `inbox` and returns an empty list for a manager view.
+        setFilter('all')
       }
 
       function startCreateGroup() {
@@ -1397,6 +1400,7 @@ window.__ModuleLoader__.load({
             setGroupIdFilter(group.id)
             setWorkspacePathFilter(null)
             setSelectedSessionId(null)
+            setFilter('all')
           }
         }
         void load({ quiet: true, force: true })
@@ -4260,7 +4264,7 @@ window.__ModuleLoader__.load({
         if (busyAction) return
         const message = scope === 'all'
           ? t('清空全部消息？包括未读消息，且无法恢复。', 'Clear all messages, including unread ones? This cannot be undone.')
-          : t('删除所有至少被一个查看者读过的消息？', 'Delete every message that at least one viewer has read?')
+          : t('仅删除全员已读的消息？还有成员未读的群消息会保留。', 'Delete fully read messages only? Group messages with unread members are kept.')
         if (!safeConfirm(message)) return
         setBusyAction(scope === 'all' ? 'clear-all' : 'clear-read')
         setError('')
@@ -4457,7 +4461,7 @@ window.__ModuleLoader__.load({
           h(Button, { key: 'prune', variant: 'outline', disabled: !!busyAction, onClick: pruneNow },
             busyAction === 'prune' ? t('清理中…', 'Pruning…') : t('清理过期消息', 'Prune messages')),
           h(Button, { key: 'read', variant: 'outline', disabled: !!busyAction, onClick: function () { clearNow('read') } },
-            busyAction === 'clear-read' ? t('删除中…', 'Deleting…') : t('删除已读', 'Delete read')),
+            busyAction === 'clear-read' ? t('删除中…', 'Deleting…') : t('仅删除全员已读', 'Delete fully read')),
           h(Button, { key: 'all', variant: 'danger', disabled: !!busyAction, onClick: function () { clearNow('all') } },
             busyAction === 'clear-all' ? t('删除中…', 'Deleting…') : t('清空全部', 'Clear all')),
         ],
