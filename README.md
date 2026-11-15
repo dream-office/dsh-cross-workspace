@@ -10,8 +10,18 @@
 
 - 版本：`1.0.0`（`package.json` / API 契约 / CHANGELOG 同步）
 - 文档最后更新：2026-11-15
-- 测试：**225 tests / 60 suites，全绿**（数字以当前仓库为准，改测试后需同步）
+- 测试：**227 tests / 60 suites，全绿**（数字以当前仓库为准，改测试后需同步）
+- 面板 build stamp：`1.0.0-rewrite 7d24f28`（v1 client 骨架实现提交，**不是当前 HEAD**；
+  用于确认加载到新版，不随测试/文档提交更新）
 - 运行位置：本机同一个 DSH Host 进程内；没有出站网络请求，消息与附件不上传
+
+> **v1.0 client 能力边界（重要）**：主面板已重写为仪表盘/消息/群组/工作区/交流图/设置/详情/发送抽屉。
+> 旧 0.9 client 的**卡片式交流图 + 时间线、全部已读、消息编辑/删除、发送 JSON/附件、群组指定成员子集、
+> 设置页清理控件**在 v1.0 UI **尚未恢复**；Host 的 6 工具、actions、store、附件/群组投递能力仍保留，
+> 可通过 Agent 工具或回滚旧 client 使用。下文中这些旧面板功能均以“0.9 legacy”理解，不表示 v1.0 已提供。
+>
+> 颜色：v1.0 主面板使用设计批准的青碧/深色 palette（集中在 `.dshcw-v1` CSS 变量），
+> 这是对“只用宿主 token”规则的**明确豁免**；SettingsSection 仍用宿主 token。详见 `docs/REWRITE-V1.md`。
 
 ---
 
@@ -323,7 +333,8 @@ Host 改动：在 Plugin Manager 里把插件关闭再开启（profile recomposi
 
 ```
 index.js               Host 半：6 个工具、管理 API、投递、系统提示注入
-client.js              Web 半：侧栏图标、管理页、设置页
+client.v1.js           Web 半 v1.0：单 view、仪表盘/消息/群组/工作区/交流图/设置/发送抽屉
+client.js              v0.9 legacy 客户端，仅回滚/旧契约测试
 lib/store.js           持久化信箱（纯 Node，可单测）
 lib/resolve.js         工作区/会话索引、寻址、归档/空白过滤
 lib/format.js          工具/提示/面板的可读文本
@@ -343,8 +354,8 @@ node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\
 # 否则用 DSH 自带 Node（Windows 示例；把 <DSH运行时> 换成实际目录）
 $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --check index.js
-& $node --check client.js
-& $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs
+& $node --check client.v1.js
+& $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs test\stats.test.mjs test\v1-client.test.mjs
 ```
 
 验收与备份规则、改动流程、扩展步骤见 [`AGENTS.md`](AGENTS.md)。视觉上的明暗主题观感需要刷新页面后
@@ -367,7 +378,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 
 - 详细版本历史：[`CHANGELOG.md`](CHANGELOG.md)
 - 当前版本：`1.0.0`
-- 自动测试：**225 tests / 60 suites，225 pass / 0 fail**
+- 自动测试：**227 tests / 60 suites，227 pass / 0 fail**
 - 独立复核记录在本机 `reports/`（已 gitignore，不随包发布）；文档会随行为变化同步更新。
 
 > 本 README 面向人和 AI 共同阅读：概念、入口、默认值、错误语义都写全；精确字段以 `docs/API.md` 为准。

@@ -14,7 +14,7 @@
   "name": "dsh-cross-workspace",
   "version": "1.0.0",
   "hostEntry": "index.js",
-  "clientEntry": "client.js",
+  "clientEntry": "client.v1.js",
   "route": {
     "method": "POST",
     "path": "/plugins/dsh-cross-workspace/api",
@@ -41,7 +41,7 @@
     "maxFileBytes": 5242880, "maxTotalFileBytes": 20971520, "maxFiles": 8,
     "inlineTextBytes": 32768, "maxGroupMembers": 32, "allowExternalAttachments": false
   },
-  "tests": "225 tests / 60 suites"
+  "tests": "227 tests / 60 suites"
 }
 ```
 
@@ -738,6 +738,8 @@ export class WakeLimiter { check(...); record(sessionId) }
 - 侧栏面板：`sidebar.panellist` id = `cross-workspace`，`main` key = `cross-workspace`。
 - 设置页：`settings.section` id = `cross-workspace`，`order` = 62，`label` 用函数返回当前语言文案。
 - 所有颜色只用 `--dsw-alias-*` / `--dsw-static-*` 主题 token；不加载 Harness Client 包。
+  **v1.0 显式豁免**：`client.v1.js` 主面板使用设计批准的深/浅青碧 palette，集中在 `.dshcw-v1`
+  CSS 变量（`--cw-*`）；SettingsSection 仍用宿主 token。见 `docs/REWRITE-V1.md` 颜色豁免。
 - 文本通过 `ctx.locale` 判定中英文（`ctx.locale.getSnapshot().active === 'zh' ? 中文 : 英文`）。
 - 当前会话 id：优先 `useSessions(s => s.current)`，回退
   `ctx.get('uiWorkspace')?.selection?.getSnapshot?.().sessionId`；都没有则用管理视角（无查看者）。

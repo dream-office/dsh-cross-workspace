@@ -279,6 +279,28 @@ describe('v1 rewrite client skeleton', () => {
     assert.equal(payloads[0].toSessionId, 's-other')
     assert.equal(payloads[0].to, 'Other')
 
+    const groupPayloads = []
+    const groupReply = env.direct(env.plugin.__test.ComposeView, {
+      t: (zh, en) => en,
+      groups: data.groups,
+      workspaces: data.workspaces,
+      replyTo: {
+        id: 'gm1',
+        subject: 'Group message',
+        from: { sessionId: 's-other' },
+        to: { groupId: 'g1', groupName: 'Group' },
+      },
+      mySessionId: 's-me',
+      onSend(payload) { groupPayloads.push(payload); return Promise.resolve({}) },
+      onCancel() {},
+      onSent() {},
+    })
+    clickableByText(groupReply, 'Send').props.onClick()
+    assert.equal(groupPayloads.length, 1)
+    assert.equal(groupPayloads[0].groupId, 'g1')
+    assert.equal(groupPayloads[0].to, 'group:Group')
+    assert.equal(groupPayloads[0].toSessionId, undefined)
+
     const saves = []
     const editor = env.direct(env.plugin.__test.GroupEditorView, {
       t: (zh, en) => en,
@@ -294,6 +316,78 @@ describe('v1 rewrite client skeleton', () => {
     assert.equal(saves[0].payload.id, 'g1')
     assert.equal(saves[0].payload.name, 'Group')
     assert.deepEqual(saves[0].payload.sessionIds, ['s-me', 's-other'])
+  })
+
+  it('builds scoped state payloads and uses read-only settings', () => {
+    const env = load(data, 'dashboard')
+    const scopedGroup = env.plugin.__test.buildStatePayload('s-me', 's-me', null, 'g1', 300)
+    assert.equal(scopedGroup.filter, 'all')
+    assert.equal(scopedGroup.groupIdFilter, 'g1')
+    assert.equal(scopedGroup.sessionId, undefined)
+    const scopedWorkspace = env.plugin.__test.buildStatePayload('s-me', 's-me', 'D:\\ws', null, 300)
+    assert.equal(scopedWorkspace.filter, 'all')
+    assert.equal(scopedWorkspace.workspacePathFilter, 'D:\\ws')
+    assert.equal(scopedWorkspace.sessionId, undefined)
+    const inbox = env.plugin.__test.buildStatePayload('s-me', 's-me', null, null, 300)
+    assert.equal(inbox.filter, 'inbox')
+    assert.equal(inbox.sessionId, 's-me')
+    const all = env.plugin.__test.buildStatePayload('s-me', 's-me', null, null, 300, true)
+    assert.equal(all.filter, 'all')
+    assert.equal(all.sessionId, undefined)
+    assert.match(source, /call\('state', \{ filter: 'all', limit: 1 \}\)/)
+    assert.doesNotMatch(source, /call\('settings', \{\}\)/)
+    const signature = env.plugin.__test.stateSignature(data)
+    assert.equal(signature, env.plugin.__test.stateSignature(data))
+    const changed = Object.assign({}, data, { messages: [Object.assign({}, data.messages[0], { read: true }), data.messages[1]] })
+    assert.notEqual(signature, env.plugin.__test.stateSignature(changed))
+    assert.match(source, /visibilitychange/)
+    assert.match(source, /document\.hasFocus/)
+  })
+
+  it('reads settings through the read-only state action', async () => {
+    const hooks = []
+    let cursor = 0
+    let plugin
+    const fakeReact = {
+      createElement(type, config, ...children) { return { type, props: Object.assign({}, config || {}, { children }) } },
+      useState(init) {
+        const index = cursor++
+        if (!(index in hooks)) hooks[index] = typeof init === 'function' ? init() : init
+        return [hooks[index], function (next) { hooks[index] = typeof next === 'function' ? next(hooks[index]) : next }]
+      },
+      useRef(init) { const index = cursor++; if (!(index in hooks)) hooks[index] = { current: init }; return hooks[index] },
+      useMemo(fn) { return fn() },
+      useCallback(fn) { return fn },
+      useEffect(fn) { const cleanup = fn(); if (typeof cleanup === 'function') hooks.push(cleanup) },
+      useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot() },
+    }
+    const windowObject = {
+      innerWidth: 1280, addEventListener() {}, removeEventListener() {},
+      localStorage: { getItem() { return null }, setItem() {} },
+      __ModuleLoader__: { load: entry => { plugin = entry.factory(() => fakeReact) } },
+    }
+    const evaluate = new Function('window', 'document', 'console', 'setTimeout', 'clearTimeout', source + '\n//# sourceURL=client.v1.js')
+    evaluate(windowObject, { hidden: false, addEventListener() {}, removeEventListener() {} }, console, setTimeout, clearTimeout)
+    const bodies = []
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async (_url, options) => {
+      bodies.push(JSON.parse(options.body))
+      return { ok: true, status: 200, json: async () => ({ ok: true, value: { settings: { allowWake: true } } }) }
+    }
+    try {
+      plugin.__test.SettingsSection({
+        ctx: { locale: null, get: () => undefined },
+        runtime: { controllers: new Set() },
+      })
+      await Promise.resolve()
+      await Promise.resolve()
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+    assert.equal(bodies.length, 1)
+    assert.equal(bodies[0].action, 'state')
+    assert.equal(bodies[0].filter, 'all')
+    assert.equal(bodies[0].limit, 1)
   })
 
   it('keeps explicit buttons and no empty handlers in source', () => {

@@ -8,6 +8,11 @@
 - 运行范围：本机同一个 DSH Host 进程
 - 数据位置：`$DSH_HOME/cross-workspace/`（`store.json` + `attachments/`）
 
+> **v1.0 client 降级说明**：本文档中关于旧面板“卡片网络图/时间线、全部已读、编辑/删除、发送 JSON/附件、
+> 群组指定成员、设置清理控件”的段落描述的是 Host 能力与 0.9 legacy client；v1.0 主面板只实现了
+> 仪表盘/消息/群组/工作区/交流图/设置/详情/发送抽屉，上述 UI 尚未恢复。Host 契约未变。
+> v1.0 的青碧/深色 palette 是设计批准的颜色规范豁免（集中在 `.dshcw-v1` CSS 变量）。
+
 ---
 
 ## 1. 组件与边界
@@ -381,7 +386,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs
 ```
 
-基线：**225 tests / 60 suites，225 pass / 0 fail**，连跑两次一致。
+基线：**227 tests / 60 suites，227 pass / 0 fail**，连跑两次一致。
 
 ---
 

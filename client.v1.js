@@ -370,6 +370,27 @@ window.__ModuleLoader__.load({
     // Dashboard / messages / groups / workspaces / graph / settings / compose
     // ---------------------------------------------------------------------------
 
+    function buildStatePayload(viewerSessionId, mySessionId, scopeWorkspacePath, scopeGroupId, limit, showAll) {
+      const scoped = !!(scopeWorkspacePath || scopeGroupId)
+      const management = scoped || showAll === true
+      const payload = { limit: limit, filter: management ? 'all' : (viewerSessionId ? 'inbox' : 'all') }
+      if (!management && viewerSessionId) payload.sessionId = viewerSessionId
+      else if (!management && mySessionId) payload.sessionId = mySessionId
+      if (scopeWorkspacePath) payload.workspacePathFilter = scopeWorkspacePath
+      if (scopeGroupId) payload.groupIdFilter = scopeGroupId
+      return payload
+    }
+
+    function stateSignature(value) {
+      if (!value || typeof value !== 'object') return ''
+      const messages = Array.isArray(value.messages) ? value.messages.map(function (mail) {
+        return [mail.id, mail.read === true, mail.editedAt || 0, mail.delivery && mail.delivery.mode, mail.delivery && mail.delivery.attempts]
+      }) : []
+      const groups = Array.isArray(value.groups) ? value.groups.map(function (group) { return [group.id, group.name, group.unread, group.memberCount] }) : []
+      const workspaces = Array.isArray(value.workspaces) ? value.workspaces.map(function (workspace) { return [workspace.path, workspace.title, workspace.unread] }) : []
+      return JSON.stringify({ viewer: value.viewer, stats: value.stats, messages: messages, groups: groups, workspaces: workspaces })
+    }
+
     function DashboardView(props) {
       const t = props.t
       const stats = props.stats
@@ -598,8 +619,16 @@ window.__ModuleLoader__.load({
         if (props.mySessionId) payload.fromSessionId = props.mySessionId
         if (target === 'reply' && props.replyTo) {
           payload.replyTo = props.replyTo.id
-          payload.to = partyLabel(props.replyTo.from, t)
-          if (props.replyTo.from && props.replyTo.from.sessionId) payload.toSessionId = props.replyTo.from.sessionId
+          const replyToGroup = props.replyTo.to && (props.replyTo.to.groupId || props.replyTo.to.groupName)
+          if (replyToGroup) {
+            const groupIdValue = props.replyTo.to.groupId
+            const group = (props.groups || []).find(function (item) { return item.id === groupIdValue })
+            payload.to = 'group:' + ((group && group.name) || props.replyTo.to.groupName || groupIdValue)
+            payload.groupId = groupIdValue
+          } else {
+            payload.to = partyLabel(props.replyTo.from, t)
+            if (props.replyTo.from && props.replyTo.from.sessionId) payload.toSessionId = props.replyTo.from.sessionId
+          }
         } else if (target === 'group') {
           const group = (props.groups || []).find(function (item) { return item.id === groupId }) || props.groups[0]
           if (!group) { setError(t('请选择群组。', 'Choose a group.')); return }
@@ -720,26 +749,40 @@ window.__ModuleLoader__.load({
       const newButtonRef = React.useRef(null)
       const [scopeWorkspacePath, setScopeWorkspacePath] = React.useState(null)
       const [scopeGroupId, setScopeGroupId] = React.useState(null)
+      const [showAll, setShowAll] = React.useState(false)
       const [viewerSessionId, setViewerSessionId] = React.useState(mySessionId)
       const seq = React.useRef(0)
       const mounted = React.useRef(true)
+      const sigRef = React.useRef('')
+      const loadedRef = React.useRef(!!props.initialData)
+      const lastStateAtRef = React.useRef(0)
       React.useEffect(function () { mounted.current = true; return function () { mounted.current = false } }, [])
       React.useEffect(function () {
         try { window.localStorage.setItem('dshcw-theme', theme) } catch (e) {}
       }, [theme])
       React.useEffect(function () {
-        if (mySessionId && !viewerSessionId) setViewerSessionId(mySessionId)
-      }, [mySessionId, viewerSessionId])
+        if (!showAll && !scopeWorkspacePath && !scopeGroupId && mySessionId && !viewerSessionId) setViewerSessionId(mySessionId)
+      }, [mySessionId, viewerSessionId, scopeWorkspacePath, scopeGroupId, showAll])
       const load = React.useCallback(function (quiet) {
         const current = ++seq.current
         if (!quiet) setLoading(true)
-        const payload = { limit: LIMIT, filter: viewerSessionId ? 'inbox' : 'all' }
-        if (viewerSessionId) payload.sessionId = viewerSessionId
-        else if (mySessionId) payload.sessionId = mySessionId
-        if (scopeWorkspacePath) payload.workspacePathFilter = scopeWorkspacePath
-        if (scopeGroupId) payload.groupIdFilter = scopeGroupId
+        const payload = buildStatePayload(viewerSessionId, mySessionId, scopeWorkspacePath, scopeGroupId, LIMIT, showAll)
         return call('state', payload).then(function (value) {
           if (!mounted.current || current !== seq.current) return
+          const signature = stateSignature(value)
+          const changed = !loadedRef.current || signature !== sigRef.current
+          sigRef.current = signature
+          loadedRef.current = true
+          if (!changed) {
+            const at = Date.now()
+            if (at - lastStateAtRef.current > 60000) {
+              lastStateAtRef.current = at
+              setData(function (previous) { return previous ? Object.assign({}, previous, { now: at }) : previous })
+            }
+            setError(''); setLoading(false)
+            return
+          }
+          lastStateAtRef.current = Date.now()
           setData(value || null); setError(''); setLoading(false)
         }).catch(function (reason) {
           if (!mounted.current || isAbortError(reason)) return
@@ -748,16 +791,49 @@ window.__ModuleLoader__.load({
       }, [call, t, viewerSessionId, mySessionId, scopeWorkspacePath, scopeGroupId])
       React.useEffect(function () { void load(false) }, [load])
       React.useEffect(function () {
-        const id = window.setInterval(function () {
-          if (document.hidden && typeof document.hidden === 'boolean') return
-          void load(true)
-        }, POLL_MS)
-        return function () { window.clearInterval(id) }
+        let timer = null
+        let stopped = false
+        function delay() {
+          if (document.hidden) return 15000
+          if (typeof document.hasFocus === 'function' && !document.hasFocus()) return 12000
+          return POLL_MS
+        }
+        function schedule() {
+          if (stopped) return
+          timer = window.setTimeout(run, delay())
+        }
+        function run() {
+          if (stopped) return
+          if (document.hidden) { schedule(); return }
+          load(true).finally(schedule)
+        }
+        function onVisibility() { if (!document.hidden) { if (timer) window.clearTimeout(timer); schedule() } }
+        function onFocus() { if (timer) window.clearTimeout(timer); schedule() }
+        function onBlur() { if (timer) window.clearTimeout(timer); schedule() }
+        document.addEventListener('visibilitychange', onVisibility)
+        window.addEventListener('focus', onFocus)
+        window.addEventListener('blur', onBlur)
+        schedule()
+        return function () {
+          stopped = true
+          if (timer) window.clearTimeout(timer)
+          document.removeEventListener('visibilitychange', onVisibility)
+          window.removeEventListener('focus', onFocus)
+          window.removeEventListener('blur', onBlur)
+        }
       }, [load])
-      function navigate(next, nextParams) {
+      function clearScope() {
+        setScopeGroupId(null)
+        setScopeWorkspacePath(null)
+      }
+      function navigate(next, nextParams, options) {
         setView(next); setParams(nextParams || {}); setMenuOpen(false); setNotice('')
+        if (!(options && options.keepScope)) clearScope()
+        if (!(options && options.keepAll)) setShowAll(false)
       }
       function back() {
+        clearScope()
+        setShowAll(false)
         navigate('dashboard')
         if (typeof requestAnimationFrame === 'function') {
           requestAnimationFrame(function () {
@@ -767,7 +843,7 @@ window.__ModuleLoader__.load({
       }
       function openMessage(mail) {
         if (!mail) return
-        navigate('detail', { messageId: mail.id })
+        navigate('detail', { messageId: mail.id }, { keepScope: true, keepAll: true })
         if (!mail.read) {
           const viewer = viewerPayload(viewerSessionId || mySessionId, data)
           call('read', Object.assign({ id: mail.id }, viewer)).then(function (value) {
@@ -799,10 +875,10 @@ window.__ModuleLoader__.load({
         setNotice(t('设置入口在 Harness 设置页的「跨工作区信使」分节。', 'Settings live in Harness Settings under “Cross-workspace courier”.'))
       }
       function openCompose(replyTo) { navigate('compose', { replyTo: replyTo || null }) }
-      function openGroup(group) { setScopeGroupId(group.id); setScopeWorkspacePath(null); setViewerSessionId(null); navigate('messages', { filter: 'all' }) }
-      function openWorkspace(workspace) { setScopeWorkspacePath(workspace.path); setScopeGroupId(null); setViewerSessionId(null); navigate('messages', { filter: 'all' }) }
+      function openGroup(group) { setShowAll(true); setScopeGroupId(group.id); setScopeWorkspacePath(null); setViewerSessionId(null); navigate('messages', { filter: 'all' }, { keepScope: true, keepAll: true }) }
+      function openWorkspace(workspace) { setShowAll(true); setScopeWorkspacePath(workspace.path); setScopeGroupId(null); setViewerSessionId(null); navigate('messages', { filter: 'all' }, { keepScope: true, keepAll: true }) }
       function openSession(workspace, session) {
-        setScopeWorkspacePath(null); setScopeGroupId(null); setViewerSessionId(session.sessionId); navigate('messages', { filter: 'all' })
+        setShowAll(false); setScopeWorkspacePath(null); setScopeGroupId(null); setViewerSessionId(session.sessionId); navigate('messages', { filter: 'all' }, { keepScope: true, keepAll: true })
       }
       const stats = data && data.stats ? data.stats : null
       const groups = data && Array.isArray(data.groups) ? data.groups : []
@@ -815,11 +891,11 @@ window.__ModuleLoader__.load({
       if (view === 'dashboard') content = h(DashboardView, {
         t: t, stats: stats, messages: messages, groups: groups, workspaces: workspaces, range: range, rows: rows,
         now: now, search: search,
-        onUnread: function () { setScopeGroupId(null); setScopeWorkspacePath(null); navigate('messages', { filter: 'unread' }) },
+        onUnread: function () { setShowAll(false); setScopeGroupId(null); setScopeWorkspacePath(null); navigate('messages', { filter: 'unread' }) },
         onGroups: function () { navigate('groups') },
         onWorkspaces: function () { navigate('workspaces') },
         onGroup: openGroup, onWorkspacesView: function () { navigate('workspaces') },
-        onAllMessages: function () { navigate('messages', { filter: 'all' }) },
+        onAllMessages: function () { setShowAll(true); clearScope(); setViewerSessionId(null); navigate('messages', { filter: 'all' }, { keepAll: true }) },
         onMoreRows: function () { setRows(rows >= 12 ? 20 : 12) },
         onOpen: openMessage, onRetry: retryMessage, onNew: function () { openCompose(null) },
       })
@@ -828,7 +904,7 @@ window.__ModuleLoader__.load({
         onOpen: openMessage, onBack: back,
       })
       else if (view === 'detail') content = h(DetailView, {
-        t: t, mail: selected, onBack: function () { navigate('messages', { filter: 'all' }) },
+        t: t, mail: selected, onBack: function () { navigate('messages', { filter: params.filter || 'all' }, { keepScope: true, keepAll: true }) },
         onReply: openCompose, onMark: markMessage, onRetry: retryMessage,
       })
       else if (view === 'groups') content = h(GroupsView, {
@@ -897,7 +973,9 @@ window.__ModuleLoader__.load({
       const [settings, setSettings] = React.useState(null)
       const [error, setError] = React.useState('')
       React.useEffect(function () {
-        call('settings', {}).then(function (value) { setSettings(value || null) }).catch(function (reason) { if (!isAbortError(reason)) setError(errorMessage(reason, t)) })
+        call('state', { filter: 'all', limit: 1 }).then(function (value) {
+          setSettings(value && value.settings ? value.settings : null)
+        }).catch(function (reason) { if (!isAbortError(reason)) setError(errorMessage(reason, t)) })
       }, [call, t])
       return h('div', { className: 'dshcw-v1', style: { padding: 0, background: 'transparent', color: 'var(--dsw-alias-label-primary)' } },
         h('h2', { style: { margin: 0, fontSize: 16 } }, t('跨工作区信使', 'Cross-workspace courier')),
@@ -931,6 +1009,6 @@ window.__ModuleLoader__.load({
       })
     }
 
-    return { inject: ['slots', 'locale'], apply: apply, __test: { App: App, DashboardView: DashboardView, MessagesView: MessagesView, DetailView: DetailView, GroupsView: GroupsView, WorkspacesView: WorkspacesView, GraphView: GraphView, ComposeView: ComposeView, GroupEditorView: GroupEditorView, SettingsView: SettingsView, BUILD_STAMP: BUILD_STAMP } }
+    return { inject: ['slots', 'locale'], apply: apply, __test: { App: App, DashboardView: DashboardView, MessagesView: MessagesView, DetailView: DetailView, GroupsView: GroupsView, WorkspacesView: WorkspacesView, GraphView: GraphView, ComposeView: ComposeView, GroupEditorView: GroupEditorView, SettingsView: SettingsView, SettingsSection: SettingsSection, buildStatePayload: buildStatePayload, stateSignature: stateSignature, BUILD_STAMP: BUILD_STAMP } }
   },
 })

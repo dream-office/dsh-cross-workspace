@@ -75,8 +75,11 @@ App
 1.0.0-rewrite <short-sha>
 ```
 
-实现：client 常量 `BUILD_STAMP = '1.0.0-rewrite <sha>'`，由 `scripts/stamp.mjs` 在提交前写入/校验；
-测试断言 `^1\.0\.0-rewrite [0-9a-f]{7,40}$`。用户一眼可确认加载的是新版，而不是缓存。
+实现：client 常量 `BUILD_STAMP = '1.0.0-rewrite <sha>'` 手工维护；测试断言
+`^1\.0\.0-rewrite [0-9a-f]{7,40}$`。用户一眼可确认加载的是新版，而不是缓存。
+（没有 `scripts/stamp.mjs` 生成器；v1 骨架不新增构建步骤。）
+当前 stamp `7d24f28` 是**骨架实现提交**，不是当前 HEAD；后续测试/文档提交不更新 stamp。
+如果发布前 client 代码还有改动，必须把它改成“最后一次 client 代码提交”的 SHA，并在 CHANGELOG 说明。
 
 ---
 

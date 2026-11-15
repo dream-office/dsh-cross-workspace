@@ -28,7 +28,8 @@
     "CODE_OF_CONDUCT.md",
     "docs/API.md",
     "docs/ARCHITECTURE.md",
-    "docs/UPGRADING.md"
+    "docs/UPGRADING.md",
+    "docs/REWRITE-V1.md"
   ],
   "dsh": {
     "bundle": {

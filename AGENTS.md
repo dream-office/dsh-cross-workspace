@@ -7,7 +7,7 @@
 
 - 当前版本：`1.0.0`
 - 文档最后同步：2026-11-15
-- 当前测试：**225 tests / 60 suites，225 pass / 0 fail**
+- 当前测试：**227 tests / 60 suites，227 pass / 0 fail**
 - 插件类型：Cordis bundle（Host 半 + Web Client 半），本地 `link:` 安装
 - 运行范围：本机同一个 DSH Host 进程，不经过网络
 
@@ -99,7 +99,9 @@ package.json             bundle + client 清单、exports、files
 9. **工具结果必须是 lossless JSON**：不要返回 `undefined` 字段/value；可选字段要么省略，要么给值。
 10. **Client 规范**：只 `require('react')`；不 import Harness Client 包；不写 `document.body/head`；
     不用 `innerHTML`；颜色只用 `--dsw-alias-*` / `--dsw-static-*` 主题 token（布局可用 `--dsh-frame-*`），
-    不写字面颜色；locale 走 `ctx.locale` 订阅；slot 注册走 `ctx.slots.inject`；清理监听器/定时器。
+    不写字面颜色。**唯一显式豁免**：`client.v1.js` 主面板的深/浅青碧 palette，集中在 `.dshcw-v1`
+    CSS 变量、由用户设计批准；SettingsSection 仍用宿主 token。新增字面色必须落入该变量块并登记；
+    locale 走 `ctx.locale` 订阅；slot 注册走 `ctx.slots.inject`；清理监听器/定时器。
 11. **生命周期清理**：所有注册放 `ctx.effect`/`ctx.on`；agent 作用域注册要同时由 agent dispose 与
     插件卸载清理；存储卸载前 `store.flush()`。
 12. **隐私**：不把真实姓名、学号、邮箱、手机号、客户名、个人绝对路径写进随包文件或测试夹具。
@@ -203,7 +205,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs test\stats.test.mjs test\v1-client.test.mjs
 ```
 
-当前基线：**225 tests / 60 suites，225 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
+当前基线：**227 tests / 60 suites，227 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
 连跑两次一致才算稳定。
 
 ### 语法与清单
