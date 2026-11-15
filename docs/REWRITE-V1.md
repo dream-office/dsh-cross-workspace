@@ -104,9 +104,14 @@ App
 
 ## 5. 预览 HTML
 
-- 路径：`preview/v1.0.0.html`（单文件、无依赖、假数据）。
+- 当前：`preview/v1.1.0.html`（v1.1 视觉修订；实现目标仍是 1.0.0 插件版本）。
+  历史 v1.0 预览保留在 `preview/v1.0.0.html`。
+- 单文件、无依赖、假数据；**深色默认，浅色可切**（localStorage 记住）；顶部一行
+  `标题/stamp | 范围 | 搜索 | 刷新 | 新消息 | 主题 | ⋯`。
 - 包含：仪表盘/KPI/图表/三卡/消息表、消息列表、群组/工作区/交流图/设置、发送抽屉、详情；
-  所有按钮可点，底部显示当前视图与操作日志；顶部显示 `1.0.0-rewrite preview`。
+  所有按钮可点，底部显示当前视图与操作日志；顶部显示 `1.1.0-preview c811d48`。
+- 进入动画：视图 150ms、KPI stagger 18ms×6、柱 240ms、行 100ms（前 8 行）、抽屉 180/140ms；
+  只动 opacity/transform；`prefers-reduced-motion: reduce` 全部关闭；不依赖 `@starting-style`/View Transitions。
 - 预览只验证视觉/交互；**不接 Host、不读写 store**。
 - 截图：当前环境无浏览器自动化，无法生成真实 1280/390/320 截图；预览 HTML 可直接打开查看。
   设计参考图在 `设计系统\cross-workspace-UI\证据\`（v4 设计，不是本预览截图）。
