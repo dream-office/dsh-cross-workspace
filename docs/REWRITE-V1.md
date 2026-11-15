@@ -138,7 +138,7 @@ App
    - 确认备份 `20261115-rewrite-pre` 与 `20261115-174535` 存在；
    - Plugin Manager **disable → enable** `cross-workspace`（让 Host 重新读取 package exports）；
    - 完全重启 DSH + Ctrl+Shift+R；
-   - 首屏顶部应显示 `1.0.0-rewrite 6de2823`；store 不迁移，旧消息/群组/设置仍在。
+   - 首屏顶部应显示 `1.0.0-rewrite 7d24f28`；store 不迁移，旧消息/群组/设置仍在。
 3. 回滚：Plugin Manager disable → 把 `exports["./client"]` 改回 `./client.js`（或切回 `c811d48`）→ enable → 重启。
    store 未动，无需数据恢复。
 4. 不手动改 profile 的 package/patch；走 `plugin_manager`。
