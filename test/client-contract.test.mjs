@@ -10,6 +10,18 @@ import { describe, it } from 'node:test'
 
 const client = await readFile(new URL('../client.js', import.meta.url), 'utf8')
 
+function luminance(hex) {
+  const channels = hex.replace('#', '').match(/.{2}/g).map(part => parseInt(part, 16) / 255)
+  const linear = channels.map(value => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4))
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+}
+
+function contrastRatio(first, second) {
+  const a = luminance(first)
+  const b = luminance(second)
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+}
+
 function functionBody(name) {
   const start = client.indexOf(`function ${name}(`)
   assert.notEqual(start, -1, `missing function ${name}`)
@@ -217,6 +229,21 @@ describe('client P0 contracts', () => {
     assert.match(client, /narrow && !compose/)
     assert.match(client, /safe-area-inset-bottom/)
     assert.match(client, /width: 48/)
+
+    const dark = client.match(/@media \(prefers-color-scheme:dark\)\{\.dshcw-dash\{([^}]*)\}\}/)
+    assert.ok(dark, 'dark dashboard token block missing')
+    const expected = {
+      '--dshcw-status-delivered': '#4ADE80',
+      '--dshcw-status-queued': '#FBBF24',
+      '--dshcw-status-failed': '#F87171',
+      '--dshcw-status-mailbox': '#9CA3AF',
+      '--dshcw-status-none': '#9CA3AF',
+    }
+    for (const [name, value] of Object.entries(expected)) {
+      assert.match(dark[1], new RegExp(name + ':' + value))
+      const ratio = contrastRatio(value, '#111827')
+      assert.ok(ratio >= 4.5, name + ' contrast ' + ratio.toFixed(2) + ' < 4.5')
+    }
   })
 
   it('clear-read is described as fully-read-only', () => {
