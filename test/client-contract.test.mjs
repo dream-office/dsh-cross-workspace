@@ -132,6 +132,13 @@ describe('client P0 contracts', () => {
     assert.match(client, /secondary === 'groups'/)
   })
 
+  it('hides the top action on narrow screens and shows a safe-area FAB', () => {
+    assert.match(client, /!narrow \? h\(Button/)
+    assert.match(client, /narrow && !compose/)
+    assert.match(client, /safe-area-inset-bottom/)
+    assert.match(client, /width: 48/)
+  })
+
   it('clear-read is described as fully-read-only', () => {
     assert.match(client, /仅删除全员已读/)
     assert.match(client, /Delete fully read/)

@@ -3,8 +3,8 @@
 > 人群：需要改代码/排查问题的开发者，以及需要理解调用链的 AI。
 > 契约字段以 [`API.md`](API.md) 为准；操作规则见 [`../AGENTS.md`](../AGENTS.md)。
 
-- 版本：`0.8.5`
-- 最后同步：2026-11-08
+- 版本：`0.9.0`
+- 最后同步：2026-11-15
 - 运行范围：本机同一个 DSH Host 进程
 - 数据位置：`$DSH_HOME/cross-workspace/`（`store.json` + `attachments/`）
 
@@ -368,7 +368,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs
 ```
 
-基线：**207 tests / 58 suites，207 pass / 0 fail**，连跑两次一致。
+基线：**208 tests / 58 suites，208 pass / 0 fail**，连跑两次一致。
 
 ---
 

@@ -2,10 +2,10 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
-## 2026-11-15 · 0.9.0（开发中：可靠性 + 简化 UI）
+## 2026-11-15 · 0.9.0（可靠性 + 简化 UI）
 
-> Release 摘要：P0 修复群组筛选与“全员已读”语义；P1 增加 `failed` 投递状态、手动重试与 5 次上限。
-> UI 简化按设计清单分 U1–U5 落地；版本在 UI 完成后统一为 0.9.0。
+> Release 摘要：P0 修复群组筛选与“全员已读”语义；P1 增加 `failed` 投递状态、手动重试与 5 次上限；
+> U1–U5 完成简化 UI（顶部 chips、340 双栏、发送抽屉、⋯ 二级页、窄屏 FAB）。
 
 - **P0-1**：侧栏点群组时切到群组筛选（离开会话收件箱），修复管理视角群组列表为空；route/UI 契约测试覆盖。
 - **P0-2**：`clear('read')` 只在全员已读时删除；群组读义务只用发送时 `memberSessionIds`（排除 sender），
@@ -25,8 +25,10 @@
   真正调用 `ManagementPage`（fake React + fake slot ctx），能直接抓 ReferenceError。
 - **U4**：完整 `⋯` 菜单（已发送/群组…/工作区/交流图/─/全部已读/刷新/─/设置）；
   工作区页、群组页、交流图迁为二级页并支持返回/Esc；主屏移除侧栏树与群组管理入口。
-- 测试：P0/P1/U1/U2/U3/U4/F2 后 **207 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
-- 未 push、未 Release；UI 阶段完成后统一 bump 0.9.0。
+- **U5**：窄屏（<760）隐藏顶部「新消息」，改用 48px FAB（safe-area）；发送抽屉变底部弹层；
+  Esc/关闭回焦 FAB；列表单列、不横向溢出。
+- 测试：P0/P1/U1–U5/F2 后 **208 tests / 58 suites，全绿**；新增 store/route/format/UI 契约覆盖。
+- 未 push、未 Release；tag/Release 由 GitHub 助手执行。
 
 ## 2026-11-08 · 0.8.5（恢复 private + 官方声明）
 

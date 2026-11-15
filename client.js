@@ -2209,13 +2209,13 @@ window.__ModuleLoader__.load({
                   )
                 : null
             ),
-            h(Button, {
+            !narrow ? h(Button, {
               variant: 'primary',
               buttonRef: newMessageButtonRef,
               onClick: startCompose,
               disabled: !data || (workspaces.length === 0 && groups.length === 0),
               style: { minHeight: 32, padding: '0 12px' },
-            }, t('新消息', 'New message'))
+            }, t('新消息', 'New message')) : null
           ),
           h(FilterChips, {
             t: t,
@@ -2241,6 +2241,35 @@ window.__ModuleLoader__.load({
         error ? h(AlertBanner, { onDismiss: function () { setError('') }, dismissLabel: t('关闭', 'Dismiss') }, error) : null,
         notice
           ? h(AlertBanner, { tone: 'success', role: 'status', onDismiss: function () { setNotice('') }, dismissLabel: t('关闭', 'Dismiss') }, notice)
+          : null,
+        narrow && !compose
+          ? h('button', {
+              type: 'button',
+              ref: newMessageButtonRef,
+              className: 'dshcw-btn',
+              'aria-label': t('新消息', 'New message'),
+              title: t('新消息', 'New message'),
+              onClick: startCompose,
+              disabled: !data || (workspaces.length === 0 && groups.length === 0),
+              style: {
+                position: 'fixed',
+                right: 14,
+                bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
+                zIndex: 30,
+                width: 48,
+                height: 48,
+                minWidth: 48,
+                padding: 0,
+                border: 0,
+                borderRadius: 999,
+                background: 'var(--dsw-alias-button-primary-fill)',
+                color: 'var(--dsw-alias-bg-base)',
+                font: 'inherit',
+                fontSize: 24,
+                lineHeight: '48px',
+                cursor: 'pointer',
+              },
+            }, '+')
           : null,
         h('div', { style: gridStyle },
           showSplitDetail
