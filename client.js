@@ -1284,27 +1284,40 @@ window.__ModuleLoader__.load({
         return hay.includes(search)
       })
       const visibleRows = tableMessages.slice(0, rows)
-      const modeTotal = stats ? stats.delivered + stats.queued + stats.failed + stats.mailbox + stats.none : 0
-      const success = stats && modeTotal > 0 ? Math.round((stats.delivered / modeTotal) * 100) : null
+      const rangeDays = stats ? stats.days.slice(-range) : []
+      const rangeTotals = rangeDays.reduce(function (sum, day) {
+        sum.sent += day.sent || 0
+        sum.received += day.received || 0
+        sum.delivered += day.delivered || 0
+        sum.queued += day.queued || 0
+        sum.failed += day.failed || 0
+        sum.mailbox += day.mailbox || 0
+        sum.none += day.none || 0
+        return sum
+      }, { sent: 0, received: 0, delivered: 0, queued: 0, failed: 0, mailbox: 0, none: 0 })
+      const chartDays = stats ? stats.days.slice(-7) : []
+      const modeTotal = rangeTotals.delivered + rangeTotals.queued + rangeTotals.failed + rangeTotals.mailbox + rangeTotals.none
+      const success = modeTotal > 0 ? Math.round((rangeTotals.delivered / modeTotal) * 100) : null
+      const rangeLabel = range === 1 ? t('今日', 'Today') : (range === 30 ? t('近30天', '30 days') : t('近7天', '7 days'))
       const kpis = stats ? [
         { key: 'unread', label: t('未读', 'Unread'), value: stats.unread, tone: 'accent' },
-        { key: 'sent', label: t('已发出', 'Sent'), value: stats.sent },
-        { key: 'failed', label: t('失败待重试', 'Failed / retry'), value: stats.failed, tone: 'danger' },
+        { key: 'sent', label: t('已发出', 'Sent'), value: rangeTotals.sent, hint: rangeLabel },
+        { key: 'failed', label: t('失败待重试', 'Failed / retry'), value: rangeTotals.failed, tone: 'danger', hint: rangeLabel },
         { key: 'groups', label: t('群组', 'Groups'), value: stats.groups },
         { key: 'workspaces', label: t('工作区', 'Workspaces'), value: stats.workspaces },
-        { key: 'success', label: t('成功率', 'Success rate'), value: success === null ? '—' : success + '%' },
+        { key: 'success', label: t('成功率', 'Success rate'), value: success === null ? '—' : success + '%', hint: rangeLabel },
       ] : []
-      const maxDay = stats && stats.days.length > 0
-        ? Math.max(1, ...stats.days.map(function (day) { return day.sent + day.received }))
+      const maxDay = chartDays.length > 0
+        ? Math.max(1, ...chartDays.map(function (day) { return day.sent + day.received }))
         : 1
       const statusTotal = modeTotal || 1
       const donut = stats
         ? [
-            { key: 'delivered', value: stats.delivered, color: 'var(--dshcw-status-delivered)' },
-            { key: 'queued', value: stats.queued, color: 'var(--dshcw-status-queued)' },
-            { key: 'failed', value: stats.failed, color: 'var(--dshcw-status-failed)' },
-            { key: 'mailbox', value: stats.mailbox, color: 'var(--dshcw-status-mailbox)' },
-            { key: 'none', value: stats.none, color: 'var(--dshcw-status-none)' },
+            { key: 'delivered', value: rangeTotals.delivered, color: 'var(--dshcw-status-delivered)' },
+            { key: 'queued', value: rangeTotals.queued, color: 'var(--dshcw-status-queued)' },
+            { key: 'failed', value: rangeTotals.failed, color: 'var(--dshcw-status-failed)' },
+            { key: 'mailbox', value: rangeTotals.mailbox, color: 'var(--dshcw-status-mailbox)' },
+            { key: 'none', value: rangeTotals.none, color: 'var(--dshcw-status-none)' },
           ]
         : []
       let cursor = 0
@@ -1371,15 +1384,15 @@ window.__ModuleLoader__.load({
               }, t('发第一条', 'Send first message')))
           : h('div', { className: 'dshcw-dash-body' },
               h('div', { className: 'dshcw-dash-kpis' }, kpis.map(function (item) {
-                return card(item.label, item.value, item.key === 'failed' ? t('点最近消息可重试', 'Retry from recent rows') : '', item.tone)
+                return card(item.label, item.value, item.hint || (item.key === 'failed' ? t('点最近消息可重试', 'Retry from recent rows') : ''), item.tone)
               })),
               h('div', { className: 'dshcw-dash-charts' },
                 h('section', { className: 'dshcw-dash-card' },
                   h('div', { className: 'dshcw-dash-card-head' },
                     h('h2', null, t('近 7 天收发量', 'Last 7 days')), h('span', null, t('收 / 发', 'received / sent'))),
-                  stats && stats.days.some(function (day) { return day.sent + day.received > 0 })
+                  chartDays.some(function (day) { return day.sent + day.received > 0 })
                     ? h('div', { className: 'dshcw-dash-bars', role: 'img', 'aria-label': t('近 7 天收发柱状图', 'Last 7 days bar chart') },
-                        stats.days.map(function (day) {
+                        chartDays.map(function (day) {
                           const total = day.sent + day.received
                           return h('div', { key: day.date, className: 'dshcw-dash-bar-day', title: day.date + ' · ' + t('收 ', 'received ') + day.received + ' / ' + t('发 ', 'sent ') + day.sent },
                             h('div', { className: 'dshcw-dash-bar-pair' },
@@ -1400,11 +1413,11 @@ window.__ModuleLoader__.load({
                         h('span', null, t('成功率', 'success')))),
                     h('div', { className: 'dshcw-dash-legend' },
                       [
-                        [t('已投递', 'Delivered'), stats.delivered, 'var(--dshcw-status-delivered)'],
-                        [t('排队', 'Queued'), stats.queued, 'var(--dshcw-status-queued)'],
-                        [t('失败', 'Failed'), stats.failed, 'var(--dshcw-status-failed)'],
-                        [t('信箱', 'Mailbox'), stats.mailbox, 'var(--dshcw-status-mailbox)'],
-                        [t('无目标', 'None'), stats.none, 'var(--dshcw-status-none)'],
+                        [t('已投递', 'Delivered'), rangeTotals.delivered, 'var(--dshcw-status-delivered)'],
+                        [t('排队', 'Queued'), rangeTotals.queued, 'var(--dshcw-status-queued)'],
+                        [t('失败', 'Failed'), rangeTotals.failed, 'var(--dshcw-status-failed)'],
+                        [t('信箱', 'Mailbox'), rangeTotals.mailbox, 'var(--dshcw-status-mailbox)'],
+                        [t('无目标', 'None'), rangeTotals.none, 'var(--dshcw-status-none)'],
                       ].map(function (row) {
                         return h('div', { key: row[0], className: 'dshcw-dash-legend-row' },
                           h('span', { style: { background: row[2] } }),
@@ -1437,12 +1450,12 @@ window.__ModuleLoader__.load({
                       })),
                 h('section', { className: 'dshcw-dash-card' },
                   h('div', { className: 'dshcw-dash-card-head' }, h('h2', null, t('消息量', 'Messages')),
-                    h('span', null, t('总 ', 'total ') + (stats ? stats.total : 0))),
+                    h('span', null, rangeLabel + ' · ' + t('总 ', 'total ') + modeTotal)),
                   h('div', { className: 'dshcw-dash-stats' },
-                    h('div', null, h('strong', null, String(stats ? stats.mailbox : 0)), h('span', null, t('信箱', 'Mailbox'))),
-                    h('div', null, h('strong', null, String(stats ? stats.failed : 0)), h('span', null, t('失败', 'Failed'))),
-                    h('div', null, h('strong', null, String(stats ? stats.queued : 0)), h('span', null, t('排队', 'Queued'))),
-                    h('div', null, h('strong', null, String(stats ? stats.none : 0)), h('span', null, t('无目标', 'None')))))),
+                    h('div', null, h('strong', null, String(rangeTotals.mailbox)), h('span', null, t('信箱', 'Mailbox'))),
+                    h('div', null, h('strong', null, String(rangeTotals.failed)), h('span', null, t('失败', 'Failed'))),
+                    h('div', null, h('strong', null, String(rangeTotals.queued)), h('span', null, t('排队', 'Queued'))),
+                    h('div', null, h('strong', null, String(rangeTotals.none)), h('span', null, t('无目标', 'None')))))),
               h('section', { className: 'dshcw-dash-card dshcw-dash-table-card' },
                 h('div', { className: 'dshcw-dash-card-head' },
                   h('h2', null, t('最近消息', 'Recent messages')),

@@ -41,7 +41,7 @@
     "maxFileBytes": 5242880, "maxTotalFileBytes": 20971520, "maxFiles": 8,
     "inlineTextBytes": 32768, "maxGroupMembers": 32, "allowExternalAttachments": false
   },
-  "tests": "213 tests / 59 suites"
+  "tests": "214 tests / 59 suites"
 }
 ```
 
@@ -385,7 +385,7 @@ interface Stats {
   failed: number
   mailbox: number
   none: number                      // 无投递目标
-  days: Array<{                     // 最近 7 个 Asia/Shanghai 日历日，最旧在前
+  days: Array<{                     // 最近 30 个 Asia/Shanghai 日历日，最旧在前
     date: string                    // YYYY-MM-DD
     sent: number
     received: number
@@ -444,8 +444,9 @@ interface Delivery {
 按“没有任何**发送时快照成员**读过”的管理口径统计；老消息无快照时回退当前成员。
 工作区 `unread` 不依赖查看者；`unreadTotal` 是**当前查看者**的未读数，用于顶部徽标。
 `stats` 是 v4 仪表盘用的**全量**聚合：`total = received ∪ sent`（按消息 id 去重），
-`delivered+queued+failed+mailbox+none = total`；只覆盖 store 当前保留范围（默认 30 天/800 条），
-不是终身累计。无 viewer session 时 `total/sent/unread/groups/workspaces` 全 0。
+`delivered+queued+failed+mailbox+none = total`；`days` 是最近 30 个上海日历日，供 KPI/图表按
+今天/近7天/近30天切片。只覆盖 store 当前保留范围（默认 30 天/800 条），不是终身累计。
+无 viewer session 时 `total/sent/unread/groups/workspaces` 全 0。
 管理视角（没有 sessionId 也没有 workspacePath）下 `filter:'inbox'` 返回空数组，面板改用 `filter:'all'`
 并自行汇总各工作区的管理口径未读数；此时 `viewer.key` 仍是管理/匿名 key，但没有 sessionId/workspacePath，
 `MailView.read` 恒为 false。

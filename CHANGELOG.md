@@ -8,12 +8,12 @@
 
 - `state.stats` 全量聚合：`scope:'viewer'`；`total = sent ∪ received` 去重；
   `delivered/queued/failed/mailbox/none` 是 top-level mode（`wake`→delivered），五状态+none=total。
-- 近 7 天按 Asia/Shanghai 日历日分桶；只覆盖本地保留范围；无 viewer session 全 0。
+- 近 30 天按 Asia/Shanghai 日历日分桶（KPI 可切今天/7/30）；只覆盖本地保留范围；无 viewer session 全 0。
 - 列表仍 300 条上限，stats 不受切片影响；无新增请求。
 - 测试：纯函数 + route 350 条消息（列表 300、stats.total=350）；**213 tests / 59 suites 全绿**。
 - **v4 dashboard shell**：默认仪表盘（页面头/KPI 6 张/7 天柱/投递环形/群组/工作区/消息量卡/最近消息表 6→12→20）；
   青碧 tokens（#00A2BD / on #0B1A1F / ink #006B7D；暗色提亮）；无数据空态；390/320 走 CSS 栅格。
-  最近消息表可按「全部消息」回列表；`近 30 天` 只过滤表格，KPI/7 天图仍按定稿 stats 口径（待设计确认是否扩展 30 天聚合）。
+  最近消息表可按「全部消息」回列表；KPI/环形/消息量按今天/近7天/近30天从 `stats.days` 求和。
 - 未 push/Release；0.9.0 tag 与 `feat/v0.9.0` 保持冻结。
 
 ## 2026-11-15 · 0.9.0（可靠性 + 简化 UI）

@@ -214,7 +214,8 @@ $DSH_HOME/cross-workspace/
 - viewer session/key、`now`、groups/workspaces 数
 
 `total = sent ∪ received`（按消息 id 去重，自己发出的群消息只算一次）；`delivered/queued/failed/mailbox/none`
-是 top-level `delivery.mode`（`wake` 归入 delivered）；七天按 Asia/Shanghai 日历日分桶。
+是 top-level `delivery.mode`（`wake` 归入 delivered）；`days` 按 Asia/Shanghai 日历日分桶最近 30 天，
+KPI 按所选范围对 `days` 求和（未读/群组/工作区是当前态），7 天图固定取最后 7 天。
 消息列表仍只返回 300 条，但 stats 不受切片影响。无 viewer session 全 0。
 只覆盖当前 store 保留范围，不是终身累计。
 
@@ -380,7 +381,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs
 ```
 
-基线：**213 tests / 59 suites，213 pass / 0 fail**，连跑两次一致。
+基线：**214 tests / 59 suites，214 pass / 0 fail**，连跑两次一致。
 
 ---
 

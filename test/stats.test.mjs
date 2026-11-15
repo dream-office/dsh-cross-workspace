@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { computeStats, STATS_DAY_WINDOW } from '../lib/stats.js'
+import { computeStats, STATS_DAY_WINDOW, sumStatsDays } from '../lib/stats.js'
 
 const NOW = Date.UTC(2026, 10, 15, 4, 0, 0) // 2026-11-15 12:00 Asia/Shanghai
 const DAY = 24 * 60 * 60 * 1000
@@ -63,7 +63,25 @@ describe('v4 stats aggregation', () => {
     assert.equal(stats.days[stats.days.length - 1].received, 5)
     assert.equal(stats.days[stats.days.length - 1].none, 1)
     const dayTotal = stats.days.reduce((sum, day) => sum + day.sent + day.received, 0)
-    assert.equal(dayTotal, 7) // old 20-day message is in total but not in the 7-day chart
+    assert.equal(dayTotal, 8) // old 20-day message is inside the 30-day window
+    assert.equal(sumStatsDays(stats.days, 7).total, 7)
+    assert.equal(sumStatsDays(stats.days, 30).total, 8)
+  })
+
+  it('includes 29 days and excludes 31 days from the 30-day window', () => {
+    const inside = mail('inside', { delivery: { mode: 'mailbox' }, createdAt: NOW - 29 * DAY })
+    const outside = mail('outside', { delivery: { mode: 'mailbox' }, createdAt: NOW - 31 * DAY })
+    const stats = computeStats({
+      visibleMessages: [inside, outside],
+      allMessages: [inside, outside],
+      viewerSessionId: 's-me',
+      viewerKey: 's:s-me',
+      now: NOW,
+    })
+    assert.equal(stats.total, 2)
+    assert.equal(stats.days.length, 30)
+    assert.equal(stats.days.reduce((sum, day) => sum + day.sent + day.received, 0), 1)
+    assert.equal(sumStatsDays(stats.days, 30).total, 1)
   })
 
   it('returns all zero without a viewer session', () => {
@@ -85,7 +103,7 @@ describe('v4 stats aggregation', () => {
     assert.equal(stats.days.length, STATS_DAY_WINDOW)
   })
 
-  it('uses the Asia/Shanghai calendar day for the 7-day chart', () => {
+  it('uses the Asia/Shanghai calendar day for the 30-day window', () => {
     const lateSh = mail('late-sh', {
       delivery: { mode: 'mailbox' },
       createdAt: Date.UTC(2026, 10, 14, 15, 59, 0), // 23:59 on 11-14 Shanghai
