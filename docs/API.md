@@ -41,7 +41,7 @@
     "maxFileBytes": 5242880, "maxTotalFileBytes": 20971520, "maxFiles": 8,
     "inlineTextBytes": 32768, "maxGroupMembers": 32, "allowExternalAttachments": false
   },
-  "tests": "208 tests / 58 suites"
+  "tests": "212 tests / 59 suites"
 }
 ```
 
@@ -367,9 +367,34 @@ value: {
     updatedAt: number
   }>
   messages: MailView[]              // 按 createdAt 倒序；inbox 时只含当前查看者可见的
+  stats: Stats                       // v4：全量聚合（不受 messages 300 上限影响）
   unreadTotal: number
   returned: number                  // 本次 messages 条数
   total: number                     // 过滤后的总数
+}
+
+interface Stats {
+  scope: 'viewer'
+  total: number                     // received ∪ sent 去重；= 五状态 + none
+  unread: number                    // 只算 received
+  sent: number                      // 当前 viewer 发出，不受收件可见性限制
+  groups: number
+  workspaces: number
+  delivered: number                 // delivery.mode='wake'
+  queued: number
+  failed: number
+  mailbox: number
+  none: number                      // 无投递目标
+  days: Array<{                     // 最近 7 个 Asia/Shanghai 日历日，最旧在前
+    date: string                    // YYYY-MM-DD
+    sent: number
+    received: number
+    delivered: number
+    queued: number
+    failed: number
+    mailbox: number
+    none: number
+  }>
 }
 
 interface MailView {
@@ -418,6 +443,9 @@ interface Delivery {
 对群组 = 当前查看者在群组消息里未读的数量（群组消息不进入工作区统计）；管理视角（无 viewer）下
 按“没有任何**发送时快照成员**读过”的管理口径统计；老消息无快照时回退当前成员。
 工作区 `unread` 不依赖查看者；`unreadTotal` 是**当前查看者**的未读数，用于顶部徽标。
+`stats` 是 v4 仪表盘用的**全量**聚合：`total = received ∪ sent`（按消息 id 去重），
+`delivered+queued+failed+mailbox+none = total`；只覆盖 store 当前保留范围（默认 30 天/800 条），
+不是终身累计。无 viewer session 时 `total/sent/unread/groups/workspaces` 全 0。
 管理视角（没有 sessionId 也没有 workspacePath）下 `filter:'inbox'` 返回空数组，面板改用 `filter:'all'`
 并自行汇总各工作区的管理口径未读数；此时 `viewer.key` 仍是管理/匿名 key，但没有 sessionId/workspacePath，
 `MailView.read` 恒为 false。
@@ -786,7 +814,7 @@ origin: http://127.0.0.1:<port>
 {"action":"state","sessionId":"session-...","filter":"inbox","limit":50}
 ```
 
-成功（节选；完整字段见上方 schema；不可省略字段包括 `settings/storeDir/now/viewer/workspaces/groups/orphans/messages/unreadTotal/returned/total`）：
+成功（节选；完整字段见上方 schema；不可省略字段包括 `settings/storeDir/now/viewer/workspaces/groups/orphans/messages/stats/unreadTotal/returned/total`）：
 
 ```json
 {

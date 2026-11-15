@@ -58,7 +58,7 @@
   },
   "author": "dream-office",
   "scripts": {
-    "test": "node --test test/store.test.mjs test/resolve.test.mjs test/format.test.mjs test/route.test.mjs test/client-contract.test.mjs"
+    "test": "node --test test/store.test.mjs test/resolve.test.mjs test/format.test.mjs test/route.test.mjs test/client-contract.test.mjs test/stats.test.mjs"
   },
   "homepage": "https://github.com/dream-office/dsh-cross-workspace#readme",
   "bugs": {

@@ -7,7 +7,7 @@
 
 - 当前版本：`0.9.0`
 - 文档最后同步：2026-11-15
-- 当前测试：**208 tests / 58 suites，208 pass / 0 fail**
+- 当前测试：**212 tests / 59 suites，212 pass / 0 fail**
 - 插件类型：Cordis bundle（Host 半 + Web Client 半），本地 `link:` 安装
 - 运行范围：本机同一个 DSH Host 进程，不经过网络
 
@@ -197,10 +197,10 @@ requested=wake
 
 ```powershell
 $node = '<DSH运行时>\dependencies\node\bin\node.exe'
-& $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs
+& $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs test\client-contract.test.mjs test\stats.test.mjs
 ```
 
-当前基线：**208 tests / 58 suites，208 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
+当前基线：**212 tests / 59 suites，212 pass / 0 fail**（约 17s；含 1.6s wake/queued 观察轮询）。
 连跑两次一致才算稳定。
 
 ### 语法与清单

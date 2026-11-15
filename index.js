@@ -16,6 +16,7 @@ import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { DEFAULT_SETTINGS, MailStore, StoreError, canonicalPath, looksTextual, mediaTypeFor, normalizeSettings, viewerKeyFor } from './lib/store.js'
 import { TargetError, buildIndex, isListableSession, pickWakeSession, resolveTarget, titleOf, viewerFor, workspaceForCwd } from './lib/resolve.js'
 import { MAX_DELIVERY_ATTEMPTS, WakeLimiter, deliverMessage } from './lib/delivery.js'
+import { computeStats } from './lib/stats.js'
 import {
   buildUnreadContext,
   pickText,
@@ -442,12 +443,24 @@ export function apply(ctx, config = {}) {
 
     const meRecord = typeof viewerObject.sessionId === 'string' ? index.sessions.get(viewerObject.sessionId) : undefined
     const meWorkspace = workspaceForCwd(index, viewerObject.workspacePath)
+    const now = Date.now()
+    const workspaceRowsValue = workspaceRows(index)
+    const stats = computeStats({
+      visibleMessages: store.visibleFor(viewerObject, 'inbox'),
+      allMessages: store.listMessages(),
+      viewerSessionId: viewerObject.sessionId,
+      viewerKey: key,
+      now,
+      groups: groups.length,
+      workspaces: workspaceRowsValue.length,
+    })
 
     return {
       settings: store.getSettings(),
       storeDir,
       storeVersion: store.storeVersion,
-      now: Date.now(),
+      now,
+      stats,
       viewer: {
         key,
         ...(viewerObject.sessionId === undefined ? {} : { sessionId: viewerObject.sessionId }),
@@ -455,7 +468,7 @@ export function apply(ctx, config = {}) {
         ...(meRecord?.title === undefined ? {} : { sessionTitle: meRecord.title }),
         ...(meWorkspace?.title === undefined ? {} : { workspaceTitle: meWorkspace.title }),
       },
-      workspaces: workspaceRows(index),
+      workspaces: workspaceRowsValue,
       groups: groupRows(index, groups, viewerObject),
       orphans: index.orphans.filter(isListableSession).map(record => ({
         sessionId: record.sessionId,

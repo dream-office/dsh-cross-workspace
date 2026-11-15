@@ -206,6 +206,18 @@ $DSH_HOME/cross-workspace/
 - 解析失败：改名为 `store.corrupt-<ts>.json`，空库继续，不阻断插件；
 - 启动时按 `retentionDays`/`maxMessages` 自动 prune 一次。
 
+### v4 stats 聚合
+
+`lib/stats.js` 是纯函数，Host 在 `buildState()` 里传入：
+- `visibleMessages = store.visibleFor(viewer, 'inbox')`（viewer 可见的收件）
+- `allMessages = store.listMessages()`（全量保留范围）
+- viewer session/key、`now`、groups/workspaces 数
+
+`total = sent ∪ received`（按消息 id 去重，自己发出的群消息只算一次）；`delivered/queued/failed/mailbox/none`
+是 top-level `delivery.mode`（`wake` 归入 delivered）；七天按 Asia/Shanghai 日历日分桶。
+消息列表仍只返回 300 条，但 stats 不受切片影响。无 viewer session 全 0。
+只覆盖当前 store 保留范围，不是终身累计。
+
 ---
 
 ## 5. 索引、寻址与过滤
@@ -368,7 +380,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 & $node --test test\store.test.mjs test\resolve.test.mjs test\format.test.mjs test\route.test.mjs
 ```
 
-基线：**208 tests / 58 suites，208 pass / 0 fail**，连跑两次一致。
+基线：**212 tests / 59 suites，212 pass / 0 fail**，连跑两次一致。
 
 ---
 

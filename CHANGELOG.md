@@ -2,6 +2,17 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
+## 2026-11-15 · v4 stats（开发中，未定版本）
+
+> 从冻结的 0.9.0 `99e1320` 起开 `feat/v4-stats`；只做 stats，不发布、不改 UI/颜色。
+
+- `state.stats` 全量聚合：`scope:'viewer'`；`total = sent ∪ received` 去重；
+  `delivered/queued/failed/mailbox/none` 是 top-level mode（`wake`→delivered），五状态+none=total。
+- 近 7 天按 Asia/Shanghai 日历日分桶；只覆盖本地保留范围；无 viewer session 全 0。
+- 列表仍 300 条上限，stats 不受切片影响；无新增请求。
+- 测试：纯函数 + route 350 条消息（列表 300、stats.total=350）；**212 tests / 59 suites 全绿**。
+- 未 push/Release；0.9.0 tag 与 `feat/v0.9.0` 保持冻结。
+
 ## 2026-11-15 · 0.9.0（可靠性 + 简化 UI）
 
 > Release 摘要：P0 修复群组筛选与“全员已读”语义；P1 增加 `failed` 投递状态、手动重试与 5 次上限；

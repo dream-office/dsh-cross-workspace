@@ -533,6 +533,40 @@ describe('action: state', () => {
     const senderInbox = await harness.call('state', { sessionId: 's-02' })
     assert.deepEqual(senderInbox.body.value.messages, [])
   })
+
+  it('aggregates stats beyond the 300-row state list cap', async () => {
+    const local = await boot()
+    try {
+      for (let index = 0; index < 350; index += 1) {
+        const sent = await local.call('send', {
+          fromSessionId: 's-01',
+          to: 'session:s-02',
+          subject: 'bulk ' + index,
+          body: 'bulk body',
+          wake: false,
+        })
+        assert.equal(sent.status, 200)
+      }
+      const state = await local.call('state', { sessionId: 's-01', filter: 'all', limit: 300 })
+      assert.equal(state.status, 200)
+      assert.equal(state.body.value.messages.length, 300)
+      assert.equal(state.body.value.stats.scope, 'viewer')
+      assert.equal(state.body.value.stats.total, 350)
+      assert.equal(state.body.value.stats.sent, 350)
+      assert.equal(state.body.value.stats.mailbox, 350)
+      assert.equal(state.body.value.stats.unread, 0)
+      assert.equal(
+        state.body.value.stats.delivered
+          + state.body.value.stats.queued
+          + state.body.value.stats.failed
+          + state.body.value.stats.mailbox
+          + state.body.value.stats.none,
+        state.body.value.stats.total,
+      )
+    } finally {
+      await local.destroy()
+    }
+  })
 })
 
 describe('action: send and delivery', () => {
