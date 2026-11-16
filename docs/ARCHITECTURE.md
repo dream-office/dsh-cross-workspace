@@ -3,8 +3,8 @@
 > 人群：需要改代码/排查问题的开发者，以及需要理解调用链的 AI。
 > 契约字段以 [`API.md`](API.md) 为准；操作规则见 [`../AGENTS.md`](../AGENTS.md)。
 
-- 版本：`1.0.0`
-- 最后同步：2026-11-15
+- 版本：`1.0.1`
+- 最后同步：2026-11-16
 - 运行范围：本机同一个 DSH Host 进程
 - 数据位置：`$DSH_HOME/cross-workspace/`（`store.json` + `attachments/`）
 
@@ -22,7 +22,7 @@ flowchart TB
   subgraph Web["DSH Web Client (browser)"]
     Icon["sidebar.panellist<br/>跨工作区信使图标"]
     Page["main / cross-workspace<br/>收件箱 + 工作区 + 群组 + 发信"]
-    Settings["settings.section / cross-workspace<br/>投递 / 清理 / 提示设置"]
+    Settings["settings API（v1 不注册 settings.section）"]
   end
 
   subgraph Host["DSH Host (同一个进程)"]

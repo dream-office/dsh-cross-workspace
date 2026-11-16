@@ -1,6 +1,6 @@
 # dsh-cross-workspace 内部契约
 
-版本：1.0.0（与 `package.json` 同步）。最后同步：2026-11-15。这个文件是 Host 半、Client 半和测试共同遵守的契约。
+版本：1.0.1（与 `package.json` 同步）。最后同步：2026-11-16。这个文件是 Host 半、Client 半和测试共同遵守的契约。
 改动契约时先改这里，再改实现。
 
 > **人类读者**：§1 概念 → §3 数据 → §4 路由 → §6 工具；每个 action 都可直接对照代码。
@@ -12,7 +12,7 @@
 ```jsonc
 {
   "name": "dsh-cross-workspace",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "hostEntry": "index.js",
   "clientEntry": "client.v1.js",
   "route": {
@@ -736,7 +736,7 @@ export class WakeLimiter { check(...); record(sessionId) }
 ## 8. Client 半
 
 - 侧栏面板：`sidebar.panellist` id = `cross-workspace`，`main` key = `cross-workspace`。
-- 设置页：`settings.section` id = `cross-workspace`，`order` = 62，`label` 用函数返回当前语言文案。
+- v1 **不注册** `settings.section`（避免只读 JSON 页面）；设置通过 `settings` API/agent 工具修改。
 - 所有颜色只用 `--dsw-alias-*` / `--dsw-static-*` 主题 token；不加载 Harness Client 包。
   **v1.0 显式豁免**：`client.v1.js` 主面板使用设计批准的深/浅青碧 palette，集中在 `.dshcw-v1`
   CSS 变量（`--cw-*`）；SettingsSection 仍用宿主 token。见 `docs/REWRITE-V1.md` 颜色豁免。

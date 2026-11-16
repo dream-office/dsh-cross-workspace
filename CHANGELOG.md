@@ -2,6 +2,16 @@
 
 所有时间均为 Asia/Shanghai。备份根目录：`<备份根目录>\dsh-cross-workspace\<yyyyMMdd-HHmmss>\`。
 
+## 2026-11-16 · 1.0.1（设置分节移除）
+
+> 修复 v1.0.0 中 Harness 设置页仍显示只读 JSON 的问题。
+
+- 不再注册 `settings.section`；面板与 Harness 设置页都不再放出不可用设置界面
+- 设置继续走 `settings` API / agent 工具；README/AGENTS/API/ARCH 同步说明
+- 其余 UI、Host 工具、actions、store v2 不变；228 tests 全绿
+- 未 push/Release
+
+
 ## 2026-11-15 · 1.0.0（重做 v1.0）
 
 > 从 `0aa8a72` / `rewrite/v1.0` 交付的新 client；Host 工具、actions、store v2、投递语义不变。

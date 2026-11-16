@@ -1122,11 +1122,6 @@ window.__ModuleLoader__.load({
           return h(App, Object.assign({}, props, { ctx: ctx, runtime: runtime }))
         })
       })
-      ctx.slots.inject('settings.section', function () {
-        return ctx.slots.register({ name: 'settings.section', id: 'cross-workspace', order: 62, label: label }, function Settings(props) {
-          return h(SettingsSection, Object.assign({}, props, { ctx: ctx, runtime: runtime }))
-        })
-      })
     }
 
     return { inject: ['slots', 'locale'], apply: apply, __test: { App: App, DashboardView: DashboardView, MessagesView: MessagesView, DetailView: DetailView, GroupsView: GroupsView, WorkspacesView: WorkspacesView, GraphView: GraphView, ComposeView: ComposeView, GroupEditorView: GroupEditorView, SettingsView: SettingsView, SettingsSection: SettingsSection, buildStatePayload: buildStatePayload, stateSignature: stateSignature, BUILD_STAMP: BUILD_STAMP } }

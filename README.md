@@ -8,8 +8,8 @@
 > **给 AI**：先读 [`AGENTS.md`](AGENTS.md)（仓库操作规则、不变量、验收清单），
 > 精确契约看 [`docs/API.md`](docs/API.md)，运行原理看 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-- 版本：`1.0.0`（`package.json` / API 契约 / CHANGELOG 同步）
-- 文档最后更新：2026-11-15
+- 版本：`1.0.1`（`package.json` / API 契约 / CHANGELOG 同步）
+- 文档最后更新：2026-11-16
 - 测试：**228 tests / 60 suites，全绿**（数字以当前仓库为准，改测试后需同步）
 - 面板 build stamp：`1.0.0-rewrite 9e35c10`（最后一次 client 代码提交，**不是当前 HEAD**；
   后续 stamp/文档/测试提交不改变它）
@@ -76,8 +76,7 @@ plugin_manager remove_bundle target=dsh-cross-workspace
 验证安装：
 
 1. `workspace_list` 工具可用（或面板出现「跨工作区信使」图标）；
-2. 设置页出现「跨工作区信使」；
-3. 侧栏 `sidebar.panellist`、`main`、`settings.section` 三个槽位 active。
+2. 侧栏 `sidebar.panellist`、`main` 两个槽位 active；v1 不注册 `settings.section`，设置通过 `settings` API/agent 工具修改。
 
 ---
 
@@ -377,7 +376,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 ## 14. 变更记录与验证
 
 - 详细版本历史：[`CHANGELOG.md`](CHANGELOG.md)
-- 当前版本：`1.0.0`
+- 当前版本：`1.0.1`
 - 自动测试：**228 tests / 60 suites，228 pass / 0 fail**
 - 独立复核记录在本机 `reports/`（已 gitignore，不随包发布）；文档会随行为变化同步更新。
 
@@ -388,7 +387,7 @@ $node = '<DSH运行时>\dependencies\node\bin\node.exe'
 ## 15. 数据版本与升级
 
 `package.json.version` 是插件版本；`lib/store.js` 的 `STORE_VERSION` 是 `store.json` 数据版本。
-当前两者分别是 `1.0.0` 和 `2`。
+当前两者分别是 `1.0.1` 和 `2`。
 
 - 升级前先备份 `$DSH_HOME/cross-workspace`；
 - v1 数据加载时自动迁移到 v2，并把 `version: 2` 写回；
